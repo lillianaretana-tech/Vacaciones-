@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control de Vacaciones — SBM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -75,6 +76,42 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 .stat-box .n.warn { color: #ffcc02; }
 .stat-box .n.ok { color: #66bb6a; }
 .last-update { display: flex; align-items: center; padding: 0 20px; border-left: 1px solid rgba(255,255,255,0.1); font-size: 11px; opacity: 0.45; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+
+
+/* ── SUPABASE CLOUD BAR ── */
+.cloud-bar {
+  background:#eef6ff;
+  border-bottom:1px solid #cfe6ff;
+  padding:8px 20px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  font-size:12px;
+}
+.cloud-status {
+  font-weight:700;
+  color:#0f1f3d;
+  margin-right:auto;
+}
+.cloud-status small {
+  display:block;
+  font-weight:500;
+  color:#6b7280;
+  margin-top:1px;
+}
+.btn-cloud { background:#0277BD; color:#fff; }
+.btn-cloud-light { background:#ffffff; color:#0f1f3d; border:1px solid #bddbf7; }
+.btn-cloud-danger { background:#B71C1C; color:#fff; }
+.config-warning {
+  background:#fff7ed;
+  border-bottom:1px solid #fed7aa;
+  color:#9a3412;
+  padding:7px 20px;
+  font-size:12px;
+  display:none;
+}
+.config-warning strong { color:#7c2d12; }
 
 /* ── TOOLBAR ── */
 .toolbar {
@@ -230,6 +267,7 @@ tr:hover td.sticky-col { background: #EFF6FF !important; }
 .saldo-low { color: #2E7D32; }
 .saldo-med { color: #E65100; }
 .saldo-high { color: #B71C1C; background: #fce4e4; padding: 1px 6px; border-radius: 4px; }
+.saldo-mode { display:block; margin-top:2px; font-size:9px; color:#6b7280; font-family:'IBM Plex Sans',sans-serif; font-weight:600; }
 
 .month-cell {
   text-align: center;
@@ -494,6 +532,34 @@ tr:hover td.sticky-col { background: #EFF6FF !important; }
   * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 
+
+
+/* ── DOCUMENTOS / UNIFORMES ── */
+.status-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; white-space:nowrap; }
+.status-ok { background:#e8f5e9; color:#1b5e20; }
+.status-warn { background:#fff8e1; color:#e65100; }
+.status-danger { background:#ffebee; color:#b71c1c; }
+.status-muted { background:#f1f3f5; color:#6b7280; }
+.info-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap:14px; }
+.info-card { background:var(--surface); border-radius:8px; box-shadow:var(--shadow); border:1px solid var(--border); overflow:hidden; }
+.info-card-head { padding:12px 14px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; border-bottom:1px solid var(--border); }
+.info-card-title { font-size:13px; font-weight:700; color:var(--header-bg); }
+.info-card-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.info-card-body { padding:12px 14px; font-size:12px; }
+.info-row { display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px dashed #edf0f3; }
+.info-row:last-child { border-bottom:none; }
+.info-row .k { color:var(--text-muted); font-weight:600; }
+.info-row .v { text-align:right; font-weight:600; }
+.uniform-list { margin-top:8px; border-top:1px solid var(--border); }
+.uniform-entry { padding:8px 0; border-bottom:1px solid #f0f2f5; display:flex; justify-content:space-between; gap:10px; }
+.uniform-entry:last-child { border-bottom:none; }
+.uniform-entry .meta { color:var(--text-muted); font-size:11px; margin-top:2px; }
+.th-doc { min-width:120px; }
+.th-uniform { min-width:110px; }
+.td-doc, .td-uniform { text-align:center; font-size:11px; }
+.modal-wide { width:620px; }
+.small-note { font-size:11px; color:var(--text-muted); margin-top:4px; line-height:1.35; }
+
 /* Responsive */
 @media (max-width: 700px) {
   .stat-group { display: none; }
@@ -657,7 +723,7 @@ tbody td { padding: 7px 8px; }
 <section class="info-band" aria-label="Criterio de programación de vacaciones">
   <div>
     <h2>📌 Criterio general para programar vacaciones</h2>
-    <p>Este control ayuda a visualizar saldos, períodos programados y coberturas. La programación debe realizarse de forma ordenada, preferiblemente en períodos continuos, evitando solicitar días sueltos o separados.</p>
+    <p>Este control calcula el saldo automáticamente cuando existe fecha de ingreso: años cumplidos × 14 días, menos vacaciones tomadas o en curso. Las vacaciones futuras quedan como programadas y se muestran en el saldo proyectado.</p>
   </div>
   <div class="rule-list">
     <div class="rule-item">✅ <span><strong>Programar por períodos:</strong> bloques claros de vacaciones.</span></div>
@@ -666,13 +732,28 @@ tbody td { padding: 7px 8px; }
   </div>
 </section>
 
+
+<!-- SUPABASE CLOUD BAR -->
+<div class="config-warning" id="configWarning">
+  <strong>Configuración pendiente:</strong> pega tu SUPABASE_URL y SUPABASE_ANON_KEY dentro del archivo HTML para activar la nube.
+</div>
+<div class="cloud-bar">
+  <div class="cloud-status" id="cloudStatus">☁ Modo local
+    <small id="cloudSubStatus">Los datos se guardan en este navegador hasta conectar Supabase.</small>
+  </div>
+  <button class="btn btn-cloud-light" id="loginBtn" onclick="cloudConnect()">☁ Conectar nube</button>
+  <button class="btn btn-cloud" id="uploadCloudBtn" onclick="uploadCurrentToCloud()" title="Sube los datos actuales de este navegador a Supabase">☁ Subir datos actuales</button>
+  <button class="btn btn-cloud-light" id="loadCloudBtn" onclick="loadFromCloudManual()" title="Carga la última versión guardada en Supabase">⬇ Cargar nube</button>
+  <button class="btn btn-cloud-danger" id="logoutBtn" onclick="cloudDisconnect()" style="display:none">Modo local</button>
+</div>
+
 <!-- TOOLBAR -->
 <div class="toolbar">
   <div class="toolbar-title">🔎 Filtros</div>
   <label>Buscar</label>
-  <input type="text" id="searchEmp" placeholder="Nombre, código o cédula" oninput="renderTable()" style="min-width:190px">
+  <input type="text" id="searchEmp" placeholder="Nombre, código o cédula" oninput="refreshCurrentViews()" style="min-width:190px">
   <label>Proyecto</label>
-  <select id="filterProy" onchange="renderTable()"><option value="">Todos</option></select>
+  <select id="filterProy" onchange="refreshCurrentViews()"><option value="">Todos</option></select>
 
   <div class="sep"></div>
   <label>Desde</label>
@@ -709,6 +790,8 @@ tbody td { padding: 7px 8px; }
 <div class="tabs">
   <button class="tab-btn active" id="tab-gantt" onclick="switchTab('gantt')">📅 Programación General</button>
   <button class="tab-btn" id="tab-cov" onclick="switchTab('cov')">👥 Próximas Coberturas</button>
+  <button class="tab-btn" id="tab-docs" onclick="switchTab('docs')">🪪 Identificaciones</button>
+  <button class="tab-btn" id="tab-uniforms" onclick="switchTab('uniforms')">👕 Uniformes</button>
 </div>
 
 <div class="tab-panel active" id="panel-gantt">
@@ -737,6 +820,29 @@ tbody td { padding: 7px 8px; }
   </div>
   <div class="cov-grid" id="covGrid"></div>
 </div>
+</div>
+
+<!-- IDENTIFICATION PANEL -->
+<div class="tab-panel" id="panel-docs">
+  <div class="cov-wrapper">
+    <div class="cov-controls">
+      <label>Control de identificación:</label>
+      <span class="help-note">Vigente, próximo a vencer o vencido según fecha registrada.</span>
+    </div>
+    <div class="info-grid" id="docsGrid"></div>
+  </div>
+</div>
+
+<!-- UNIFORMS PANEL -->
+<div class="tab-panel" id="panel-uniforms">
+  <div class="cov-wrapper">
+    <div class="cov-controls">
+      <label>Entregas de uniformes:</label>
+      <button class="btn btn-success" onclick="openUniformModal(null)">＋ Registrar entrega</button>
+      <span class="help-note">Historial por funcionario, fecha, tipo y cantidad.</span>
+    </div>
+    <div class="info-grid" id="uniformsGrid"></div>
+  </div>
 </div>
 <div class="overlay" id="vacOverlay">
   <div class="modal" style="width:520px">
@@ -845,7 +951,7 @@ tbody td { padding: 7px 8px; }
           </select>
         </div>
         <div class="form-group">
-          <label>Días de saldo</label>
+          <label>Saldo manual inicial / respaldo</label>
           <input type="number" id="eSaldo" min="0" max="90" value="0">
         </div>
       </div>
@@ -859,16 +965,87 @@ tbody td { padding: 7px 8px; }
           <input type="text" id="eCodigo" placeholder="Ej: CR1-0305">
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de identificación</label>
+          <select id="eTipoIdentificacion">
+            <option value="Cédula nacional">Cédula nacional</option>
+            <option value="DIMEX">DIMEX</option>
+            <option value="Pasaporte">Pasaporte</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Vence identificación</label>
+          <input type="date" id="eVenceIdentificacion">
+          <div class="small-note">Opcional. Se usa para alertas de vencimiento.</div>
+        </div>
+      </div>
       <div class="form-group">
         <label>Fecha de ingreso</label>
         <input type="date" id="eIngreso">
-        <div class="auto-days" style="display:block;color:#6b7280">Sirve para saber cuándo cumple año laboral y revisar si el saldo está vencido.</div>
+        <div class="auto-days" style="display:block;color:#6b7280">Con fecha de ingreso, el saldo se calcula automático. Este campo queda como respaldo si no hay fecha de ingreso.</div>
       </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-secondary" onclick="closeEmp()">Cancelar</button>
       <button class="btn btn-danger" id="deleteEmpBtn" onclick="deleteEmp()" style="display:none; margin-right:auto">🗑 Eliminar</button>
       <button class="btn btn-success" onclick="saveEmp()">✔ Guardar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── UNIFORM MODAL ── -->
+<div class="overlay" id="uniformOverlay">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h3>Registrar entrega de uniforme</h3>
+      <div class="sub">Historial operativo por funcionario</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Proyecto</label>
+          <select id="uProy" onchange="populateUniformEmpList()"></select>
+        </div>
+        <div class="form-group">
+          <label>Funcionario</label>
+          <select id="uEmp"></select>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Fecha entrega</label>
+          <input type="date" id="uFecha">
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <input type="text" id="uTipo" list="uniformTypeList" placeholder="Camisa, pantalón...">
+          <datalist id="uniformTypeList">
+            <option value="Camisa">
+            <option value="Pantalón">
+            <option value="Zapatos">
+            <option value="Gabacha">
+            <option value="Jacket">
+            <option value="Gafete">
+            <option value="EPP">
+            <option value="Uniforme completo">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" id="uCantidad" min="1" value="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observación</label>
+        <input type="text" id="uObs" placeholder="Talla, condición, detalle entregado...">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeUniform()">Cancelar</button>
+      <button class="btn btn-success" onclick="saveUniform()">✔ Guardar entrega</button>
     </div>
   </div>
 </div>
@@ -1069,7 +1246,21 @@ let editVacIndex = null; // vacation index currently being edited
 let editEmpId = null;  // for emp modal
 let ctxId = null;      // for context menu
 
-const STORAGE_KEY = 'sbm_vac_v5';
+const STORAGE_KEY = 'sbm_vac_v7_supabase_personal';
+
+// ═══════════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════════
+// 1) Crea el proyecto en Supabase.
+// 2) Ejecuta el SQL que te dejé en el archivo de instrucciones.
+// 3) Pega aquí tu Project URL y tu anon public key.
+const SUPABASE_URL = 'https://lipkgzneyweiyjoanrcm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpcGtnem5leXdlaXlqb2FucmNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMDgzMzksImV4cCI6MjA5Mzc4NDMzOX0.TER4yYg4CNfu9q5y5AEvUNuK2Q5w-rg1CgCUWmIOz1s';
+const CLOUD_RECORD_ID = 'control_principal';
+
+const CLOUD_ENABLED = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 30;
+const sbClient = CLOUD_ENABLED ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let cloudReady = false;
 
 function applyDataCorrections() {
   // Corrección confirmada: Melba Reyes debe tomar 14 días calendario,
@@ -1096,24 +1287,147 @@ function normalizeName(name) {
     .trim();
 }
 
-function init() {
+async function init() {
+  if (!CLOUD_ENABLED) {
+    document.getElementById('configWarning').style.display = 'block';
+  }
+
   const raw = localStorage.getItem(STORAGE_KEY);
   emps = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(SEED));
-  normalizeAllCoberturas();   // fix "Juana Diaz" → "Juana Díaz" in saved data
-  mergeSeedEmployeeFields();    // agrega fecha de ingreso si el navegador tenía una versión anterior guardada
-  applyDataCorrections();      // aplica correcciones confirmadas aunque existan datos guardados en el navegador
+
+  if (CLOUD_ENABLED) {
+    try {
+      cloudReady = true;
+      const cloudData = await fetchCloudData();
+      if (cloudData && Array.isArray(cloudData) && cloudData.length) {
+        emps = cloudData;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(emps));
+      } else if (emps && emps.length) {
+        await saveCloudData(false);
+      }
+    } catch (err) {
+      console.warn('No se pudo cargar Supabase:', err);
+      cloudReady = false;
+    }
+  }
+
+  normalizeAllCoberturas();
+  mergeSeedEmployeeFields();
+  applyDataCorrections();
   populateFilter();
   buildLegend();
   populateCovFilter();
   refreshCoberturaList();
   renderTable();
   updateStats();
+  updateCloudUI();
   document.getElementById('lastUpdate').textContent = 'Guardado: ' + new Date().toLocaleDateString('es-CR');
 }
 
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(emps));
   document.getElementById('lastUpdate').textContent = 'Guardado: ' + new Date().toLocaleDateString('es-CR') + ' ' + new Date().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'});
+  if (cloudReady) saveCloudData(false);
+}
+
+function updateCloudUI(msg) {
+  const status = document.getElementById('cloudStatus');
+  const loginBtn = document.getElementById('loginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  if (!CLOUD_ENABLED) {
+    status.innerHTML = '☁ Supabase pendiente<small id="cloudSubStatus">Pega la URL y la anon key para activar sincronización.</small>';
+    loginBtn.style.display = 'inline-flex';
+    logoutBtn.style.display = 'none';
+    return;
+  }
+
+  if (cloudReady) {
+    status.innerHTML = `☁ Conectado a Supabase<small id="cloudSubStatus">${msg || 'Sincronización directa activa, sin login por correo.'}</small>`;
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'inline-flex';
+  } else {
+    status.innerHTML = '☁ Modo local<small id="cloudSubStatus">Haz clic en Conectar nube para cargar/guardar en Supabase.</small>';
+    loginBtn.style.display = 'inline-flex';
+    logoutBtn.style.display = 'none';
+  }
+}
+
+async function cloudConnect() {
+  if (!CLOUD_ENABLED) {
+    alert('Primero pega la URL y la anon key de Supabase dentro del archivo HTML.');
+    return;
+  }
+  cloudReady = true;
+  const cloudData = await fetchCloudData();
+  if (cloudData && Array.isArray(cloudData) && cloudData.length) {
+    if (confirm('Ya hay datos guardados en Supabase. ¿Deseas cargarlos ahora?')) {
+      emps = cloudData;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(emps));
+      location.reload();
+      return;
+    }
+  } else {
+    await saveCloudData(true);
+  }
+  updateCloudUI('Conectado. Los cambios se guardarán en Supabase.');
+}
+
+function cloudDisconnect() {
+  cloudReady = false;
+  updateCloudUI('Modo local activo. Los cambios quedan solo en este navegador.');
+}
+
+async function fetchCloudData() {
+  if (!cloudReady || !sbClient) return null;
+  const { data, error } = await sbClient
+    .from('sbm_control_state')
+    .select('data, updated_at')
+    .eq('id', CLOUD_RECORD_ID)
+    .maybeSingle();
+  if (error) {
+    console.warn(error);
+    updateCloudUI('Error cargando nube: ' + error.message);
+    return null;
+  }
+  if (data?.updated_at) updateCloudUI('Última nube: ' + new Date(data.updated_at).toLocaleString('es-CR'));
+  return data?.data || null;
+}
+
+async function saveCloudData(showAlert=true) {
+  if (!cloudReady || !sbClient) return;
+  const payload = {
+    id: CLOUD_RECORD_ID,
+    data: emps,
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await sbClient
+    .from('sbm_control_state')
+    .upsert(payload, { onConflict: 'id' });
+  if (error) {
+    console.warn(error);
+    updateCloudUI('Error guardando nube: ' + error.message);
+    if (showAlert) alert('No se pudo guardar en Supabase: ' + error.message);
+    return;
+  }
+  updateCloudUI('Guardado en nube: ' + new Date().toLocaleString('es-CR'));
+  if (showAlert) alert('Datos guardados en Supabase.');
+}
+
+async function uploadCurrentToCloud() {
+  if (!cloudReady) { await cloudConnect(); if (!cloudReady) return; }
+  if (!confirm('Esto subirá los datos actuales de este navegador y reemplazará la versión de Supabase. ¿Continuar?')) return;
+  await saveCloudData(true);
+}
+
+async function loadFromCloudManual() {
+  if (!cloudReady) { await cloudConnect(); if (!cloudReady) return; }
+  const cloudData = await fetchCloudData();
+  if (!cloudData || !Array.isArray(cloudData) || !cloudData.length) { alert('No encontré datos guardados en Supabase.'); return; }
+  if (!confirm('Esto cargará la versión de Supabase y reemplazará los datos visibles en este navegador. ¿Continuar?')) return;
+  emps = cloudData;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(emps));
+  location.reload();
 }
 
 // ═══════════════════════════════════════════
@@ -1221,6 +1535,74 @@ function vacationDaysCR(s, e) {
   return n;
 }
 
+
+function todayISO() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
+}
+
+function completedServiceYears(fechaIngreso, asOf=todayISO()) {
+  if (!fechaIngreso) return 0;
+  const start = new Date(fechaIngreso + 'T12:00:00');
+  const ref = new Date(asOf + 'T12:00:00');
+  if (isNaN(start) || start > ref) return 0;
+  let years = ref.getFullYear() - start.getFullYear();
+  const anniv = new Date(ref.getFullYear(), start.getMonth(), start.getDate());
+  if (ref < anniv) years--;
+  return Math.max(0, years);
+}
+
+function calcVacationBalance(emp, asOf=todayISO()) {
+  const fallback = Number(emp.saldo || 0);
+  if (!emp.fechaIngreso) {
+    return {
+      automatic:false,
+      years:0,
+      generated:fallback,
+      taken:0,
+      scheduled:0,
+      balance:fallback,
+      projected:fallback,
+      label:'Manual',
+      tooltip:`Saldo manual: ${fallback} día(s). Agregue fecha de ingreso para cálculo automático.`
+    };
+  }
+
+  const years = completedServiceYears(emp.fechaIngreso, asOf);
+  const generated = years * 14;
+  let taken = 0;
+  let scheduled = 0;
+
+  (emp.vacaciones || []).forEach(v => {
+    const dias = vacationDaysCR(v.inicio, v.fin);
+    // Si ya inició, se considera tomado/en curso. Si es futuro, queda como programado.
+    if ((v.inicio || '') <= asOf) taken += dias;
+    else scheduled += dias;
+  });
+
+  const balance = generated - taken;
+  const projected = balance - scheduled;
+  return {
+    automatic:true,
+    years,
+    generated,
+    taken,
+    scheduled,
+    balance,
+    projected,
+    label:'Auto',
+    tooltip:`Cálculo automático: ${years} año(s) cumplido(s) × 14 = ${generated} día(s) generados. Tomados/en curso: ${taken}. Programados futuros: ${scheduled}. Saldo actual: ${balance}. Saldo proyectado: ${projected}.`
+  };
+}
+
+function saldoClass(value) {
+  return value < 0 ? 'saldo-high' : value===0 ? 'saldo-0' : value<=5 ? 'saldo-low' : value<=10 ? 'saldo-med' : 'saldo-high';
+}
+
+function saldoLabel(value) {
+  return value < 0 ? `⚠${value}` : `${value}`;
+}
+
 function vacsInMonth(emp, y, m) {
   return (emp.vacaciones||[]).filter(v => {
     const s = new Date(v.inicio+'T12:00:00'), e = new Date(v.fin+'T12:00:00');
@@ -1262,6 +1644,8 @@ function renderTable() {
   hHtml += '<th class="th-proy">Proyecto</th>';
   hHtml += '<th class="th-saldo">Saldo</th>';
   hHtml += '<th class="th-ingreso">Ingreso</th>';
+  hHtml += '<th class="th-doc">Identificación</th>';
+  hHtml += '<th class="th-uniform">Uniforme</th>';
   hHtml += '<th class="th-actions">Acciones</th>';
   months.forEach(({y,mo}) => {
     const cur = y===curY && mo===curM;
@@ -1278,15 +1662,16 @@ function renderTable() {
     if (emp.proyecto !== lastProy) {
       lastProy = emp.proyecto;
       const c = PC[emp.proyecto]||'#666';
-      bHtml += `<tr class="group-row"><td colspan="${months.length+5}" style="border-left:4px solid ${c}; padding-left:14px">
+      bHtml += `<tr class="group-row"><td colspan="${months.length+7}" style="border-left:4px solid ${c}; padding-left:14px">
         ${emp.proyecto}
       </td></tr>`;
     }
 
     const c = PC[emp.proyecto]||'#666';
-    const s = emp.saldo||0;
-    const sCls = s < 0 ? 'saldo-high' : s===0 ? 'saldo-0' : s<=5 ? 'saldo-low' : s<=10 ? 'saldo-med' : 'saldo-high';
-    const sLbl = s < 0 ? `⚠${s}` : `${s}`;
+    const bal = calcVacationBalance(emp);
+    const s = bal.balance;
+    const sCls = saldoClass(s);
+    const sLbl = saldoLabel(s);
 
     bHtml += `<tr oncontextmenu="showCtx(event,${emp.id})">`;
 
@@ -1299,11 +1684,14 @@ function renderTable() {
     </td>`;
 
     bHtml += `<td class="td-proyecto"><span class="badge" style="background:${c}">${emp.proyecto}</span></td>`;
-    bHtml += `<td class="td-saldo"><span class="${sCls}" title="${s} días de vacaciones pendientes">${sLbl}</span></td>`;
+    bHtml += `<td class="td-saldo"><span class="${sCls}" title="${bal.tooltip}">${sLbl}</span><br><span class="saldo-mode">${bal.label}${bal.automatic ? ' · Proy. '+bal.projected : ''}</span></td>`;
     bHtml += `<td class="td-ingreso" title="Fecha de ingreso y próximo aniversario">${ingresoDisplay(emp)}</td>`;
+    bHtml += `<td class="td-doc" title="Vencimiento de identificación">${docStatusHtml(emp)}</td>`;
+    bHtml += `<td class="td-uniform" title="Última entrega registrada">${lastUniformHtml(emp)}</td>`;
     bHtml += `<td class="td-actions">
       <div class="emp-actions">
         <button class="icon-btn" onclick="event.stopPropagation(); openEditEmp(${emp.id})" title="Editar funcionario">✏️</button>
+        <button class="icon-btn" onclick="event.stopPropagation(); openUniformModal(${emp.id})" title="Registrar uniforme">👕</button>
         <button class="icon-btn danger" onclick="event.stopPropagation(); deleteEmpById(${emp.id})" title="Eliminar funcionario">🗑</button>
       </div>
     </td>`;
@@ -1337,7 +1725,7 @@ function renderTable() {
   });
 
   if (!rows.length) {
-    bHtml = `<tr><td colspan="${months.length+5}" style="text-align:center;padding:40px;color:#9ca3af">Sin funcionarios para mostrar con los filtros actuales.</td></tr>`;
+    bHtml = `<tr><td colspan="${months.length+7}" style="text-align:center;padding:40px;color:#9ca3af">Sin funcionarios para mostrar con los filtros actuales.</td></tr>`;
   }
 
   document.getElementById('tBody').innerHTML = bHtml;
@@ -1346,9 +1734,10 @@ function renderTable() {
 
 function updateStats() {
   const total = emps.length;
-  const pending = emps.reduce((s,e)=>s+(e.saldo||0),0);
+  const balances = emps.map(e => calcVacationBalance(e));
+  const pending = balances.reduce((s,b)=>s+(b.balance||0),0);
   const sched = emps.reduce((s,e)=>s+(e.vacaciones||[]).length,0);
-  const alerts = emps.filter(e=>(e.saldo||0)>10).length;
+  const alerts = balances.filter(b=>(b.balance||0)>10 || (b.projected||0)<0).length;
   document.getElementById('sTotal').textContent = total;
   document.getElementById('sPending').textContent = pending;
   document.getElementById('sScheduled').textContent = sched;
@@ -1360,6 +1749,8 @@ function clearFilters() {
   const search = document.getElementById('searchEmp');
   if (search) search.value = '';
   renderTable();
+  renderDocs();
+  renderUniforms();
 }
 
 function populateFilter() {
@@ -1467,9 +1858,11 @@ function onVacEmpChange() {
 function showVacEmpInfo(emp) {
   document.getElementById('vInfoCodigo').textContent = emp.codigo || '—';
   document.getElementById('vInfoCedula').textContent = emp.cedula || '—';
+  const bal = calcVacationBalance(emp);
   const sEl = document.getElementById('vInfoSaldo');
-  sEl.textContent = emp.saldo||0;
-  sEl.style.color = (emp.saldo||0) < 0 ? '#B71C1C' : (emp.saldo||0) > 10 ? '#B71C1C' : (emp.saldo||0) > 5 ? '#E65100' : '#2E7D32';
+  sEl.textContent = bal.balance;
+  sEl.title = bal.tooltip;
+  sEl.style.color = bal.balance < 0 ? '#B71C1C' : bal.balance > 10 ? '#B71C1C' : bal.balance > 5 ? '#E65100' : '#2E7D32';
   document.getElementById('vEmpInfo').style.display = 'flex';
 }
 
@@ -1597,13 +1990,9 @@ function saveVac() {
   }
 
   if (isEditing) {
-    const old = emp.vacaciones[editVacIndex];
-    const oldDias = Number(old.dias || 0);
     emp.vacaciones[editVacIndex] = {inicio, fin, dias, cobertura:cob, notas:nota};
-    emp.saldo = (emp.saldo||0) + oldDias - dias; // devuelve lo anterior y descuenta lo nuevo
   } else {
     emp.vacaciones.push({inicio, fin, dias, cobertura:cob, notas:nota});
-    emp.saldo = (emp.saldo||0) - dias;
   }
 
   editVacIndex = null;
@@ -1623,7 +2012,6 @@ function delVac(empId, idx) {
   const emp = emps.find(e=>e.id===empId);
   const v = emp.vacaciones[idx];
   if (!confirm(`¿Eliminar vacaciones del ${fmtDate(v.inicio)} al ${fmtDate(v.fin)}?`)) return;
-  emp.saldo = (emp.saldo||0) + v.dias;
   emp.vacaciones.splice(idx, 1);
   persist();
   renderVacList(emp);
@@ -1651,6 +2039,8 @@ function openAddEmp() {
   document.getElementById('eCedula').value='';
   document.getElementById('eCodigo').value='';
   document.getElementById('eIngreso').value='';
+  document.getElementById('eTipoIdentificacion').value='Cédula nacional';
+  document.getElementById('eVenceIdentificacion').value='';
   document.getElementById('deleteEmpBtn').style.display='none';
   document.getElementById('empOverlay').classList.add('open');
 }
@@ -1667,6 +2057,8 @@ function openEditEmp(empId) {
   document.getElementById('eCedula').value = emp.cedula||'';
   document.getElementById('eCodigo').value = emp.codigo||'';
   document.getElementById('eIngreso').value = emp.fechaIngreso||'';
+  document.getElementById('eTipoIdentificacion').value = emp.tipoIdentificacion||'Cédula nacional';
+  document.getElementById('eVenceIdentificacion').value = emp.venceIdentificacion||'';
   document.getElementById('deleteEmpBtn').style.display='inline-flex';
   document.getElementById('empOverlay').classList.add('open');
 }
@@ -1679,17 +2071,21 @@ function saveEmp() {
   const cedula = document.getElementById('eCedula').value.trim();
   const codigo = document.getElementById('eCodigo').value.trim();
   const fechaIngreso = document.getElementById('eIngreso').value;
+  const tipoIdentificacion = document.getElementById('eTipoIdentificacion').value;
+  const venceIdentificacion = document.getElementById('eVenceIdentificacion').value;
   if (editEmpId) {
     const emp = emps.find(e=>e.id===editEmpId);
-    if (emp) Object.assign(emp, {nombre, proyecto:proy, saldo, cedula, codigo, fechaIngreso});
+    if (emp) Object.assign(emp, {nombre, proyecto:proy, saldo, cedula, codigo, fechaIngreso, tipoIdentificacion, venceIdentificacion});
   } else {
     const maxId = Math.max(0,...emps.map(e=>e.id));
-    emps.push({id:maxId+1, nombre, proyecto:proy, saldo, cedula, codigo, fechaIngreso, vacaciones:[]});
+    emps.push({id:maxId+1, nombre, proyecto:proy, saldo, cedula, codigo, fechaIngreso, tipoIdentificacion, venceIdentificacion, vacaciones:[], uniformes:[]});
   }
   persist();
   refreshProjectUI();
   closeEmp();
   renderTable();
+  renderDocs();
+  renderUniforms();
 }
 
 function refreshProjectUI() {
@@ -1722,6 +2118,8 @@ function deleteEmp() {
   refreshProjectUI();
   closeEmp();
   renderTable();
+  renderDocs();
+  renderUniforms();
 }
 
 function closeEmp() {
@@ -1772,7 +2170,7 @@ function importJSON(ev) {
 }
 
 function resetData() {
-  if (!confirm('¿Restaurar los datos originales? Se perderán todos los cambios guardados.')) return;
+  if (!confirm('¿Restaurar los datos originales en este navegador? La nube no se borra.')) return;
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
 }
@@ -1782,10 +2180,183 @@ function resetData() {
 // ═══════════════════════════════════════════
 document.getElementById('vacOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeVac(); });
 document.getElementById('empOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeEmp(); });
+document.getElementById('uniformOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeUniform(); });
 document.addEventListener('click', e => { if(!e.target.closest('.ctx-menu')) hideCtx(); });
 document.addEventListener('keydown', e => {
-  if(e.key==='Escape') { closeVac(); closeEmp(); hideCtx(); }
+  if(e.key==='Escape') { closeVac(); closeEmp(); closeUniform(); hideCtx(); }
 });
+
+
+
+
+function refreshCurrentViews() {
+  renderTable();
+  renderDocs();
+  renderUniforms();
+  if (document.getElementById('panel-cov')?.classList.contains('active')) renderCoverage();
+}
+
+// ═══════════════════════════════════════════
+// IDENTIFICACIÓN Y UNIFORMES
+// ═══════════════════════════════════════════
+let curUniformEmpId = null;
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dt = new Date(dateStr + 'T12:00:00'); dt.setHours(0,0,0,0);
+  return Math.ceil((dt - today) / 86400000);
+}
+
+function docStatus(emp) {
+  const due = daysUntil(emp.venceIdentificacion);
+  if (due === null) return {cls:'status-muted', label:'Sin fecha', detail:'No registrada'};
+  if (due < 0) return {cls:'status-danger', label:'Vencida', detail:`Hace ${Math.abs(due)} día(s)`};
+  if (due <= 30) return {cls:'status-danger', label:'Por vencer', detail:`${due} día(s)`};
+  if (due <= 60) return {cls:'status-warn', label:'Próxima', detail:`${due} día(s)`};
+  return {cls:'status-ok', label:'Vigente', detail:`${due} día(s)`};
+}
+
+function docStatusHtml(emp) {
+  const st = docStatus(emp);
+  const due = emp.venceIdentificacion ? fmtFullDate(emp.venceIdentificacion) : 'Sin vencimiento';
+  return `<span class="status-pill ${st.cls}">${st.label}</span><br><span class="saldo-mode">${due}</span>`;
+}
+
+function lastUniform(emp) {
+  const list = [...(emp.uniformes || [])].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  return list[0] || null;
+}
+
+function lastUniformHtml(emp) {
+  const u = lastUniform(emp);
+  if (!u) return '<span class="status-pill status-muted">Sin registro</span>';
+  return `<strong>${fmtFullDate(u.fecha)}</strong><br><span class="saldo-mode">${u.tipo || 'Entrega'} x${u.cantidad || 1}</span>`;
+}
+
+function renderDocs() {
+  const grid = document.getElementById('docsGrid');
+  if (!grid) return;
+  const filter = document.getElementById('filterProy')?.value || '';
+  const search = (document.getElementById('searchEmp')?.value || '').trim().toLowerCase();
+  const rows = emps.filter(e => {
+    const matchesProject = !filter || e.proyecto === filter;
+    const haystack = `${e.nombre||''} ${e.codigo||''} ${e.cedula||''}`.toLowerCase();
+    return matchesProject && (!search || haystack.includes(search));
+  }).sort((a,b) => {
+    const da = daysUntil(a.venceIdentificacion);
+    const db = daysUntil(b.venceIdentificacion);
+    return (da ?? 99999) - (db ?? 99999);
+  });
+  if (!rows.length) { grid.innerHTML = '<div class="cov-empty"><div class="big">🪪</div>No hay funcionarios para mostrar.</div>'; return; }
+  grid.innerHTML = rows.map(emp => {
+    const st = docStatus(emp);
+    const c = PC[emp.proyecto] || '#666';
+    return `<div class="info-card">
+      <div class="info-card-head" style="border-left:4px solid ${c}">
+        <div><div class="info-card-title">${emp.nombre}</div><div class="info-card-sub">${emp.proyecto} · ${emp.codigo || 'Sin código'}</div></div>
+        <span class="status-pill ${st.cls}">${st.label}</span>
+      </div>
+      <div class="info-card-body">
+        <div class="info-row"><span class="k">Tipo</span><span class="v">${emp.tipoIdentificacion || 'Cédula nacional'}</span></div>
+        <div class="info-row"><span class="k">Número</span><span class="v">${emp.cedula || '—'}</span></div>
+        <div class="info-row"><span class="k">Vence</span><span class="v">${emp.venceIdentificacion ? fmtFullDate(emp.venceIdentificacion) : '—'}</span></div>
+        <div class="info-row"><span class="k">Alerta</span><span class="v">${st.detail}</span></div>
+        <div style="text-align:right;margin-top:10px"><button class="btn btn-secondary" onclick="openEditEmp(${emp.id})">✏️ Editar</button></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderUniforms() {
+  const grid = document.getElementById('uniformsGrid');
+  if (!grid) return;
+  const filter = document.getElementById('filterProy')?.value || '';
+  const search = (document.getElementById('searchEmp')?.value || '').trim().toLowerCase();
+  const rows = emps.filter(e => {
+    const matchesProject = !filter || e.proyecto === filter;
+    const haystack = `${e.nombre||''} ${e.codigo||''} ${e.cedula||''}`.toLowerCase();
+    return matchesProject && (!search || haystack.includes(search));
+  }).sort((a,b) => a.proyecto.localeCompare(b.proyecto) || a.nombre.localeCompare(b.nombre));
+  if (!rows.length) { grid.innerHTML = '<div class="cov-empty"><div class="big">👕</div>No hay funcionarios para mostrar.</div>'; return; }
+  grid.innerHTML = rows.map(emp => {
+    const c = PC[emp.proyecto] || '#666';
+    const list = [...(emp.uniformes || [])].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    const entries = list.length ? list.map((u,idx) => `<div class="uniform-entry">
+      <div><strong>${fmtFullDate(u.fecha)}</strong> · ${u.tipo || 'Entrega'} x${u.cantidad || 1}<div class="meta">${u.observacion || ''}</div></div>
+      <button class="del-btn" onclick="deleteUniform(${emp.id}, ${idx})" title="Eliminar entrega">×</button>
+    </div>`).join('') : '<div class="vac-list-empty">Sin entregas registradas</div>';
+    return `<div class="info-card">
+      <div class="info-card-head" style="border-left:4px solid ${c}">
+        <div><div class="info-card-title">${emp.nombre}</div><div class="info-card-sub">${emp.proyecto} · ${emp.codigo || 'Sin código'}</div></div>
+        <button class="btn btn-success" onclick="openUniformModal(${emp.id})">＋ Entrega</button>
+      </div>
+      <div class="info-card-body"><div class="uniform-list">${entries}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function openUniformModal(empId) {
+  curUniformEmpId = empId;
+  const psel = document.getElementById('uProy');
+  psel.innerHTML = '';
+  [...new Set(emps.map(e=>e.proyecto))].sort().forEach(p => { const o=document.createElement('option'); o.value=p; o.textContent=p; psel.appendChild(o); });
+  const emp = emps.find(e=>e.id===empId);
+  psel.value = emp ? emp.proyecto : (psel.options[0]?.value || '');
+  populateUniformEmpList();
+  if (emp) document.getElementById('uEmp').value = emp.id;
+  document.getElementById('uFecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('uTipo').value = '';
+  document.getElementById('uCantidad').value = '1';
+  document.getElementById('uObs').value = '';
+  document.getElementById('uniformOverlay').classList.add('open');
+}
+
+function populateUniformEmpList() {
+  const p = document.getElementById('uProy').value;
+  const sel = document.getElementById('uEmp');
+  sel.innerHTML = '';
+  emps.filter(e=>e.proyecto===p).sort((a,b)=>a.nombre.localeCompare(b.nombre)).forEach(e => {
+    const o = document.createElement('option'); o.value=e.id; o.textContent=e.nombre; sel.appendChild(o);
+  });
+}
+
+function saveUniform() {
+  const empId = +document.getElementById('uEmp').value;
+  const emp = emps.find(e=>e.id===empId);
+  if (!emp) { alert('Seleccione un funcionario.'); return; }
+  const fecha = document.getElementById('uFecha').value;
+  const tipo = document.getElementById('uTipo').value.trim();
+  const cantidad = parseInt(document.getElementById('uCantidad').value) || 1;
+  const observacion = document.getElementById('uObs').value.trim();
+  if (!fecha) { alert('Ingrese la fecha de entrega.'); return; }
+  if (!tipo) { alert('Ingrese el tipo de uniforme o artículo entregado.'); return; }
+  if (!emp.uniformes) emp.uniformes = [];
+  emp.uniformes.push({fecha, tipo, cantidad, observacion});
+  persist();
+  closeUniform();
+  renderTable();
+  renderUniforms();
+}
+
+function deleteUniform(empId, sortedIdx) {
+  const emp = emps.find(e=>e.id===empId);
+  if (!emp || !emp.uniformes) return;
+  const sorted = [...emp.uniformes].map((u,i)=>({...u,_i:i})).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const u = sorted[sortedIdx];
+  if (!u) return;
+  if (!confirm(`¿Eliminar entrega de ${u.tipo || 'uniforme'} del ${fmtFullDate(u.fecha)}?`)) return;
+  emp.uniformes.splice(u._i,1);
+  persist();
+  renderUniforms();
+  renderTable();
+}
+
+function closeUniform() {
+  const ov = document.getElementById('uniformOverlay');
+  if (ov) ov.classList.remove('open');
+  curUniformEmpId = null;
+}
 
 // ═══════════════════════════════════════════
 // TABS
@@ -1796,6 +2367,8 @@ function switchTab(name) {
   document.getElementById('tab-'+name).classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
   if (name === 'cov') renderCoverage();
+  if (name === 'docs') renderDocs();
+  if (name === 'uniforms') renderUniforms();
 }
 
 // ═══════════════════════════════════════════
