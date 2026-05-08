@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Vacaciones — SBM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --border: #e2e5ea;
+  --text: #1a1d23;
+  --text-muted: #6b7280;
+  --header-bg: #0f1f3d;
+  --header-accent: #1e88e5;
+  --c-advant: #1565C0;
+  --c-bayer: #E65100;
+  --c-dxc: #6A1B9A;
+  --c-lseg: #2E7D32;
+  --c-mck: #B71C1C;
+  --c-multipark: #00695C;
+  --c-uberbambu: #F57F17;
+  --c-ubercedral: #BF360C;
+  --c-ubercoe: #4E342E;
+  --c-wplaces: #880E4F;
+  --c-ops: #37474F;
+  --radius: 6px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.09);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 13px; }
+
+/* ── HEADER ── */
+.header {
+  background: var(--header-bg);
+  color: white;
+  padding: 0 24px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-bottom: 3px solid var(--header-accent);
+  min-height: 64px;
+}
+.header-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 24px 12px 0;
+  border-right: 1px solid rgba(255,255,255,0.12);
+  min-width: 220px;
+}
+.header-brand .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.header-brand .sub { font-size: 11px; opacity: 0.5; margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
+.stat-group {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-left: auto;
+}
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 22px;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  text-align: center;
+  min-width: 90px;
+}
+.stat-box .n { font-size: 26px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; line-height: 1; }
+.stat-box .l { font-size: 10px; opacity: 0.55; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-box .n.warn { color: #ffcc02; }
+.stat-box .n.ok { color: #66bb6a; }
+.last-update { display: flex; align-items: center; padding: 0 20px; border-left: 1px solid rgba(255,255,255,0.1); font-size: 11px; opacity: 0.45; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.toolbar label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+select, input[type="text"] {
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+select:focus, input:focus { border-color: var(--header-accent); }
+.sep { width: 1px; background: var(--border); height: 24px; margin: 0 4px; }
+.btn {
+  padding: 6px 13px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: filter 0.15s, transform 0.1s;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--header-bg); color: white; }
+.btn-secondary { background: #f0f2f5; color: var(--text); border: 1px solid var(--border); }
+.btn-success { background: #2E7D32; color: white; }
+.btn-danger  { background: #B71C1C; color: white; }
+.btn-info    { background: #0277BD; color: white; }
+
+/* ── LEGEND ── */
+.legend {
+  background: var(--surface);
+  padding: 6px 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.legend span { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.leg-item:hover { background: var(--bg); }
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ── TABLE WRAPPER ── */
+.table-wrapper { overflow-x: auto; padding: 16px 20px 60px; }
+
+table {
+  border-collapse: collapse;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-width: 900px;
+  width: 100%;
+}
+
+thead th {
+  background: var(--header-bg);
+  color: rgba(255,255,255,0.85);
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  letter-spacing: 0.2px;
+}
+thead th.sticky-col { position: sticky; left: 0; z-index: 20; text-align: left; }
+thead th.th-nombre { min-width: 180px; padding-left: 14px; }
+thead th.th-proy { min-width: 100px; }
+thead th.th-saldo { min-width: 52px; }
+thead th.th-month { min-width: 68px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+thead th.current-mo { background: #1565C0 !important; }
+
+tbody td {
+  padding: 5px 7px;
+  border-bottom: 1px solid #f0f2f5;
+  vertical-align: middle;
+}
+tbody td.sticky-col {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 5;
+  border-right: 2px solid var(--border);
+}
+tr:nth-child(even) td.sticky-col { background: #fafbfc; }
+tr:nth-child(even) td { background: #fafbfc; }
+tr:hover td { background: #EFF6FF !important; }
+tr:hover td.sticky-col { background: #EFF6FF !important; }
+
+.td-nombre {
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 14px;
+}
+.td-nombre .proj-strip {
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.td-nombre:hover .name-text { text-decoration: underline; }
+
+.td-proyecto { text-align: center; }
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 9px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.td-saldo { text-align: center; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13px; }
+.saldo-0 { color: #9e9e9e; }
+.saldo-low { color: #2E7D32; }
+.saldo-med { color: #E65100; }
+.saldo-high { color: #B71C1C; background: #fce4e4; padding: 1px 6px; border-radius: 4px; }
+
+.month-cell {
+  text-align: center;
+  cursor: pointer;
+  vertical-align: middle;
+  padding: 3px 4px;
+  min-height: 28px;
+  position: relative;
+}
+.month-cell:hover { background: #EFF6FF !important; }
+.month-cell.current-mo-cell { background: #fef9e7 !important; }
+.month-cell.current-mo-cell:hover { background: #EFF6FF !important; }
+
+.vac-pill {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  font-family: 'IBM Plex Mono', monospace;
+  cursor: pointer;
+  margin: 1px;
+  white-space: nowrap;
+  transition: filter 0.1s;
+  line-height: 1.4;
+}
+.vac-pill:hover { filter: brightness(1.15); }
+
+/* group row */
+.group-row td {
+  background: #f0f4f8 !important;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  color: #374151;
+  border-bottom: 1px solid #dde3ec;
+}
+
+/* ── MODAL ── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(10,20,40,0.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 10px;
+  width: 480px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  border-top: 4px solid var(--header-accent);
+}
+.modal-head {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-head h3 { font-size: 15px; font-weight: 700; color: var(--header-bg); }
+.modal-head .sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.modal-body { padding: 18px 22px; }
+.modal-foot {
+  padding: 12px 22px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  background: #fafbfc;
+  border-radius: 0 0 10px 10px;
+}
+.form-group { margin-bottom: 13px; }
+.form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--header-accent); outline: none; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 14px 0 16px; }
+
+/* vac list inside modal */
+.vac-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+.vac-list-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted); }
+.vac-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f2f5;
+  font-size: 12px;
+}
+.vac-item:last-child { border-bottom: none; }
+.vac-item:nth-child(even) { background: #fafbfc; }
+.vac-item .info { flex: 1; }
+.vac-item .dates { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 11px; }
+.vac-item .days { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.vac-item .actions { display:flex; align-items:center; gap:5px; margin-left:8px; }
+.vac-item .mini-btn { background:#f3f4f6; border:1px solid #e5e7eb; cursor:pointer; color:#374151; font-size:11px; font-weight:700; padding:4px 7px; border-radius:5px; font-family:inherit; }
+.vac-item .mini-btn:hover { background:#eaf2ff; border-color:#bfdbfe; }
+.vac-item .mini-btn.danger { color:#B71C1C; background:#fff5f5; border-color:#f3cccc; }
+.vac-item .mini-btn.danger:hover { background:#fce4e4; }
+.section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 10px; }
+
+/* days auto-pill */
+.auto-days { font-size: 11px; color: #2E7D32; font-weight: 600; margin-top: 3px; display: none; }
+
+/* ── TABS ── */
+.tabs {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  gap: 0;
+}
+.tab-btn {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--header-accent); border-bottom-color: var(--header-accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── COVERAGE PANEL ── */
+.cov-wrapper { padding: 16px 20px 60px; }
+.cov-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.cov-controls label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.days-pill {
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.days-pill.active { border-color: var(--header-accent); background: var(--header-accent); color: white; }
+
+.cov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+
+.cov-card {
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.cov-card-head {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cov-card-head .person { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.cov-card-head .person .icon { font-size: 20px; }
+.cov-card-head .count { font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; }
+.cov-entry {
+  padding: 10px 16px;
+  border-top: 1px solid rgba(0,0,0,0.07);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cov-entry:nth-child(even) { background: rgba(0,0,0,0.03); }
+.cov-entry .date-block { text-align: center; min-width: 46px; }
+.cov-entry .date-block .day { font-size: 22px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; line-height: 1; }
+.cov-entry .date-block .mon { font-size: 10px; font-weight: 600; text-transform: uppercase; opacity: 0.7; }
+.cov-entry .info { flex: 1; }
+.cov-entry .emp-name { font-weight: 600; font-size: 12px; }
+.cov-entry .meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.cov-entry .days-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; color: white; }
+.today-line { border-left: 3px solid #E65100; }
+.future-line { border-left: 3px solid #1565C0; }
+.cov-empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 13px; grid-column: 1/-1; }
+.cov-empty .big { font-size: 36px; margin-bottom: 8px; }
+
+/* upcoming tag */
+.tag-today { background: #E65100; color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; }
+.tag-soon  { background: #F57F17; color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; }
+.tag-upcoming { background: #1565C0; color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; }
+
+.cov-card-head .print-btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s;
+}
+.cov-card-head .print-btn:hover { background: rgba(255,255,255,0.35); }
+
+/* Print coverage sheet */
+#printSheet {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: white;
+  z-index: 9999;
+  padding: 32px 40px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  overflow-y: auto;
+}
+#printSheet .ps-header { border-bottom: 3px solid #0f1f3d; padding-bottom: 14px; margin-bottom: 20px; }
+#printSheet .ps-header h1 { font-size: 20px; color: #0f1f3d; }
+#printSheet .ps-header .ps-meta { font-size: 12px; color: #6b7280; margin-top: 4px; }
+#printSheet .ps-header .ps-person { font-size: 15px; font-weight: 700; margin-top: 8px; color: #1e88e5; display:flex; align-items:center; gap:6px; }
+#printSheet table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+#printSheet thead th { background: #0f1f3d; color: white; padding: 9px 12px; text-align: left; font-size: 12px; }
+#printSheet tbody td { padding: 9px 12px; border-bottom: 1px solid #e2e5ea; font-size: 13px; vertical-align: middle; }
+#printSheet tbody tr:nth-child(even) td { background: #f8f9fa; }
+#printSheet .ps-badge { display:inline-block; padding:2px 8px; border-radius:8px; font-size:10px; font-weight:700; color:white; }
+#printSheet .ps-footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e2e5ea; font-size: 11px; color: #9ca3af; display:flex; justify-content:space-between; }
+#printSheet .no-print-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0f1f3d; padding: 10px 20px; display: flex; gap: 10px; align-items: center; }
+#printSheet .no-print-bar span { color: rgba(255,255,255,0.7); font-size: 12px; flex:1; }
+
+@media print {
+  body > *:not(#printSheet) { display: none !important; }
+  #printSheet { display: block !important; position: static !important; padding: 0 !important; }
+  #printSheet .no-print-bar { display: none !important; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .stat-group { display: none; }
+  .table-wrapper { padding: 10px; }
+}
+
+/* Context menu */
+.ctx-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 2000;
+  min-width: 160px;
+  overflow: hidden;
+  display: none;
+}
+.ctx-item {
+  padding: 9px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ctx-item:hover { background: var(--bg); }
+.ctx-item.danger { color: #B71C1C; }
+
+
+/* ── CLARITY / POLISH UPDATES ── */
+.info-band {
+  margin: 14px 20px 0;
+  background: linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+  border: 1px solid #dbeafe;
+  border-left: 5px solid var(--header-accent);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+  box-shadow: 0 6px 18px rgba(15,31,61,0.06);
+}
+.info-band h2 {
+  font-size: 15px;
+  color: var(--header-bg);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-band p { font-size: 12.5px; color: #4b5563; line-height: 1.45; }
+.rule-list { display: grid; gap: 6px; }
+.rule-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid #e5edf7;
+  border-radius: 8px;
+  padding: 7px 9px;
+}
+.rule-item strong { color: var(--header-bg); }
+.toolbar {
+  margin: 14px 20px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15,31,61,0.05);
+}
+.toolbar .toolbar-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--header-bg);
+  margin-right: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend { margin: 8px 20px 0; border: 1px solid var(--border); border-radius: 12px; }
+.tabs { margin: 12px 20px 0; border: 1px solid var(--border); border-radius: 12px 12px 0 0; }
+.table-wrapper { padding-top: 12px; }
+table { border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 8px 22px rgba(15,31,61,0.07); }
+thead th { padding: 10px 7px; }
+tbody td { padding: 7px 8px; }
+.group-row td { background: #eef4fb !important; color: #0f1f3d; }
+.th-saldo::after { content: ' saldo'; font-size: 9px; opacity: 0.7; font-weight: 500; }
+.month-cell { height: 34px; }
+.vac-pill { border-radius: 999px; padding: 3px 8px; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12); }
+.saldo-high { display:inline-block; }
+
+.emp-actions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  min-width: 104px;
+}
+.icon-btn {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--header-bg);
+  border-radius: 8px;
+  padding: 5px 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(15,31,61,0.06);
+}
+.icon-btn:hover { background: #eef6ff; border-color: var(--header-accent); }
+.icon-btn.danger { color: #B71C1C; }
+.icon-btn.danger:hover { background: #fff1f1; border-color: #f4b4b4; }
+.th-actions { min-width: 108px; }
+
+.th-ingreso { min-width: 96px; }
+.td-ingreso { text-align:center; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#374151; white-space:nowrap; }
+.ingreso-empty { color:#9ca3af; font-family:'IBM Plex Sans', sans-serif; }
+.anniv-badge { display:inline-block; margin-top:3px; padding:1px 6px; border-radius:999px; background:#eef6ff; color:#1565C0; font-size:9px; font-weight:700; font-family:'IBM Plex Sans', sans-serif; }
+.anniv-due { background:#fff4e6; color:#B45309; }
+.th-ingreso::after { content:' ingreso'; font-size:9px; opacity:.7; font-weight:500; }
+
+@media (max-width: 900px) {
+  .emp-actions { gap: 4px; }
+  .icon-btn { padding: 6px 8px; }
+}
+.help-note {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-left: auto;
+  padding: 4px 8px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+@media (max-width: 900px) {
+  .info-band { grid-template-columns: 1fr; }
+  .help-note { width: 100%; margin-left: 0; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-brand">
+    <div class="logo">🗓 Control de Vacaciones</div>
+    <div class="sub">SBM · Control interno de programación</div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-box"><div class="n" id="sTotal">-</div><div class="l">Funcionarios</div></div>
+    <div class="stat-box"><div class="n warn" id="sPending">-</div><div class="l">Días pendientes</div></div>
+    <div class="stat-box"><div class="n ok" id="sScheduled">-</div><div class="l">Períodos prog.</div></div>
+    <div class="stat-box"><div class="n" id="sAlerts">-</div><div class="l">Con más de 10d</div></div>
+  </div>
+  <div class="last-update" id="lastUpdate">—</div>
+</div>
+
+
+<!-- INFO BAND -->
+<section class="info-band" aria-label="Criterio de programación de vacaciones">
+  <div>
+    <h2>📌 Criterio general para programar vacaciones</h2>
+    <p>Este control ayuda a visualizar saldos, períodos programados y coberturas. La programación debe realizarse de forma ordenada, preferiblemente en períodos continuos, evitando solicitar días sueltos o separados.</p>
+  </div>
+  <div class="rule-list">
+    <div class="rule-item">✅ <span><strong>Programar por períodos:</strong> bloques claros de vacaciones.</span></div>
+    <div class="rule-item">🚫 <span><strong>Evitar días sueltos:</strong> no dividir vacaciones sin coordinación previa.</span></div>
+    <div class="rule-item">👥 <span><strong>Confirmar cobertura:</strong> registrar quién cubre antes de guardar.</span></div>
+  </div>
+</section>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-title">🔎 Filtros</div>
+  <label>Buscar</label>
+  <input type="text" id="searchEmp" placeholder="Nombre, código o cédula" oninput="renderTable()" style="min-width:190px">
+  <label>Proyecto</label>
+  <select id="filterProy" onchange="renderTable()"><option value="">Todos</option></select>
+
+  <div class="sep"></div>
+  <label>Desde</label>
+  <select id="yearFrom" onchange="renderTable()">
+    <option value="2024">2024</option>
+    <option value="2025" selected>2025</option>
+    <option value="2026">2026</option>
+  </select>
+  <label>Hasta</label>
+  <select id="yearTo" onchange="renderTable()">
+    <option value="2025">2025</option>
+    <option value="2026" selected>2026</option>
+    <option value="2027">2027</option>
+  </select>
+
+  <div class="sep"></div>
+  <button class="btn btn-success" onclick="openVacModal(null,null)">🗓 Nueva Vacación</button>
+  <button class="btn btn-primary" onclick="openAddEmp()">＋ Funcionario</button>
+  <button class="btn btn-secondary" onclick="exportJSON()">💾 Exportar</button>
+  <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Importar</button>
+  <button class="btn btn-secondary" onclick="window.print()">🖨 Imprimir</button>
+  <button class="btn btn-secondary" onclick="clearFilters()">🧹 Limpiar filtros</button>
+  <button class="btn btn-danger" onclick="resetData()" title="Volver a datos originales">↺ Reset</button>
+  <span class="help-note">Usa ✏️ para editar o 🗑 para eliminar funcionarios. Clic sobre un mes para programar vacaciones.</span>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+</div>
+
+<!-- LEGEND -->
+<div class="legend" id="legend">
+  <span>Proyectos:</span>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" id="tab-gantt" onclick="switchTab('gantt')">📅 Programación General</button>
+  <button class="tab-btn" id="tab-cov" onclick="switchTab('cov')">👥 Próximas Coberturas</button>
+</div>
+
+<div class="tab-panel active" id="panel-gantt">
+<!-- TABLE -->
+<div class="table-wrapper">
+  <table>
+    <thead id="tHead"></thead>
+    <tbody id="tBody"></tbody>
+  </table>
+</div>
+</div>
+
+<!-- COVERAGE PANEL -->
+<div class="tab-panel" id="panel-cov">
+<div class="cov-wrapper">
+  <div class="cov-controls">
+    <label>Ver próximos:</label>
+    <button class="days-pill active" data-days="7"  onclick="setCovDays(7)">7 días</button>
+    <button class="days-pill"        data-days="14" onclick="setCovDays(14)">14 días</button>
+    <button class="days-pill"        data-days="30" onclick="setCovDays(30)">30 días</button>
+    <button class="days-pill"        data-days="60" onclick="setCovDays(60)">60 días</button>
+    <button class="days-pill"        data-days="90" onclick="setCovDays(90)">90 días</button>
+    <div class="sep"></div>
+    <label>Filtrar backup:</label>
+    <select id="covFilter" onchange="renderCoverage()"><option value="">Todas</option></select>
+  </div>
+  <div class="cov-grid" id="covGrid"></div>
+</div>
+</div>
+<div class="overlay" id="vacOverlay">
+  <div class="modal" style="width:520px">
+    <div class="modal-head">
+      <h3>Programar Vacaciones</h3>
+      <div class="sub" id="vacSub"></div>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step 1: Select employee -->
+      <div style="background:#f0f4f8;border-radius:8px;padding:14px;margin-bottom:16px">
+        <div class="section-title" style="margin-bottom:10px">Funcionario</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label>Proyecto</label>
+            <select id="vProy" onchange="onVacProyChange()">
+              <option value="">— Seleccione —</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>Empleado</label>
+            <select id="vEmp" onchange="onVacEmpChange()">
+              <option value="">— Seleccione —</option>
+            </select>
+          </div>
+        </div>
+        <!-- Employee info strip -->
+        <div id="vEmpInfo" style="display:none;margin-top:10px;padding:8px 10px;background:white;border-radius:6px;border:1px solid var(--border);display:flex;gap:16px;align-items:center;font-size:12px">
+          <div><span style="color:var(--text-muted);font-size:10px;font-weight:600;text-transform:uppercase">Código</span><br><strong id="vInfoCodigo" style="font-family:'IBM Plex Mono',monospace">—</strong></div>
+          <div><span style="color:var(--text-muted);font-size:10px;font-weight:600;text-transform:uppercase">Cédula</span><br><strong id="vInfoCedula" style="font-family:'IBM Plex Mono',monospace">—</strong></div>
+          <div><span style="color:var(--text-muted);font-size:10px;font-weight:600;text-transform:uppercase">Saldo disponible</span><br><strong id="vInfoSaldo" style="font-size:16px">—</strong></div>
+        </div>
+      </div>
+
+      <!-- Vacaciones ya programadas -->
+      <div class="section-title">Vacaciones programadas</div>
+      <div class="vac-list" id="vacListBox"></div>
+
+      <hr class="divider">
+      <div class="section-title" id="vacFormTitle">Agregar período</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha inicio</label>
+          <input type="date" id="vStart" oninput="autoCalc()">
+        </div>
+        <div class="form-group">
+          <label>Fecha fin</label>
+          <input type="date" id="vEnd" oninput="autoCalc()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Días calculados (calendario sin feriados CR)</label>
+          <input type="number" id="vDias" min="1" max="90" placeholder="Auto">
+          <div class="auto-days" id="autoDaysHint"></div>
+        </div>
+        <div class="form-group">
+          <label>Cobertura <span style="font-weight:400;color:#2E7D32;font-size:10px">(pre-llenado con backup principal)</span></label>
+          <input type="text" id="vCobertura" list="coberturaList" placeholder="Quién cubre" autocomplete="off">
+          <datalist id="coberturaList">
+            <option value="Juana Díaz">
+            <option value="Rocio Romero">
+          </datalist>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notas / Observaciones</label>
+        <input type="text" id="vNotas" placeholder="Observaciones opcionales">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" id="cancelEditVacBtn" onclick="cancelEditVac()" style="display:none;margin-right:auto">Cancelar edición</button>
+      <button class="btn btn-secondary" onclick="closeVac()">Cerrar</button>
+      <button class="btn btn-success" id="saveVacBtn" onclick="saveVac()">✔ Guardar vacaciones</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EMPLOYEE MODAL ── -->
+<div class="overlay" id="empOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="empTitle">Funcionario</h3>
+      <div class="sub" id="empSub"></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nombre completo (Apellidos Nombre)</label>
+        <input type="text" id="eName" placeholder="Ej: Solano Castro Olga María">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Proyecto</label>
+          <select id="eProy">
+            <option>ADVANT</option>
+            <option>BAYER</option>
+            <option>DXC</option>
+            <option>LSEG</option>
+            <option>MCK</option>
+            <option>MULTIPARK</option>
+            <option>UBER BAMBU</option>
+            <option>UBER CEDRAL</option>
+            <option>UBER COE</option>
+            <option>WPLACES AV</option>
+            <option>Operaciones</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Días de saldo</label>
+          <input type="number" id="eSaldo" min="0" max="90" value="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cédula</label>
+          <input type="text" id="eCedula" placeholder="Número de cédula">
+        </div>
+        <div class="form-group">
+          <label>Código</label>
+          <input type="text" id="eCodigo" placeholder="Ej: CR1-0305">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Fecha de ingreso</label>
+        <input type="date" id="eIngreso">
+        <div class="auto-days" style="display:block;color:#6b7280">Sirve para saber cuándo cumple año laboral y revisar si el saldo está vencido.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeEmp()">Cancelar</button>
+      <button class="btn btn-danger" id="deleteEmpBtn" onclick="deleteEmp()" style="display:none; margin-right:auto">🗑 Eliminar</button>
+      <button class="btn btn-success" onclick="saveEmp()">✔ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="ctxVac()">🗓 Programar vacaciones</div>
+  <div class="ctx-item" onclick="ctxEdit()">✏️ Editar funcionario</div>
+  <div class="ctx-item danger" onclick="ctxDelete()">🗑 Eliminar funcionario</div>
+</div>
+
+<!-- PRINT SHEET -->
+<div id="printSheet">
+  <div class="ps-header">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start">
+      <div>
+        <h1>SBM Corp — Programación de Coberturas</h1>
+        <div class="ps-meta" id="ps-meta"></div>
+        <div class="ps-person" id="ps-person"></div>
+      </div>
+      <img src="" style="height:0" id="ps-logo">
+    </div>
+  </div>
+  <div id="ps-body"></div>
+  <div class="ps-footer">
+    <span id="ps-footer-left"></span>
+    <span>Control de Vacaciones · SBM Corp · LRETANA</span>
+  </div>
+  <div class="no-print-bar">
+    <span>Vista previa de impresión para <strong id="ps-name-bar"></strong></span>
+    <button class="btn btn-success" onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+    <button class="btn btn-secondary" onclick="closePrint()">✕ Cerrar</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// PROJECT COLORS
+// ═══════════════════════════════════════════
+const PC = {
+  'ADVANT':       '#1565C0',
+  'BAYER':        '#E65100',
+  'DXC':          '#6A1B9A',
+  'LSEG':         '#2E7D32',
+  'MCK':          '#B71C1C',
+  'MULTIPARK':    '#00695C',
+  'UBER BAMBU':   '#F57F17',
+  'UBER CEDRAL':  '#BF360C',
+  'UBER COE':     '#4E342E',
+  'WPLACES AV':   '#880E4F',
+  'Operaciones':  '#37474F'
+};
+
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// ═══════════════════════════════════════════
+// INITIAL DATA (loaded from company files)
+// ═══════════════════════════════════════════
+const SEED = [
+  // ── ADVANT ──
+  { id:1, nombre:'Quesada Tenorio Evelyn Priscilla', proyecto:'ADVANT', saldo:6, cedula:'603390072', codigo:'CR1-5038', fechaIngreso:'2021-03-19',
+    vacaciones:[
+      {inicio:'2024-12-16',fin:'2024-12-16',dias:1,cobertura:'',notas:''},
+      {inicio:'2025-01-01',fin:'2025-01-01',dias:1,cobertura:'',notas:''}
+    ]},
+
+  // ── BAYER ──
+  { id:2, nombre:'Romero Maylling Del Carmen', proyecto:'BAYER', saldo:0, cedula:'', codigo:'', fechaIngreso:'', vacaciones:[] },
+  { id:3, nombre:'Guevara Cruz Celia', proyecto:'BAYER', saldo:7, cedula:'', codigo:'', fechaIngreso:'',
+    vacaciones:[
+      {inicio:'2025-10-27',fin:'2025-10-27',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-11-03',fin:'2025-11-03',dias:1,cobertura:'Juana Díaz',notas:''}
+    ]},
+  { id:4, nombre:'Calderón Camacho Karen', proyecto:'BAYER', saldo:0, cedula:'', codigo:'', fechaIngreso:'',
+    vacaciones:[{inicio:'2025-02-06',fin:'2025-02-12',dias:5,cobertura:'',notas:''}]},
+  { id:5, nombre:'Mendoza Fajardo Matilde', proyecto:'BAYER', saldo:0, cedula:'', codigo:'', fechaIngreso:'',
+    vacaciones:[{inicio:'2025-09-09',fin:'2025-09-21',dias:9,cobertura:'Juana Díaz',notas:''}]},
+  { id:6, nombre:'Menocal Bella Osca', proyecto:'BAYER', saldo:0, cedula:'', codigo:'', fechaIngreso:'', vacaciones:[] },
+  { id:7, nombre:'Rodríguez Quesada Marilyn', proyecto:'BAYER', saldo:0, cedula:'', codigo:'', fechaIngreso:'',
+    vacaciones:[{inicio:'2026-02-19',fin:'2026-02-25',dias:5,cobertura:'Juana Díaz',notas:''}]},
+  { id:8, nombre:'Sánchez Salas Andrea Marcela', proyecto:'BAYER', saldo:0, cedula:'', codigo:'', fechaIngreso:'', vacaciones:[] },
+
+  // ── DXC ──
+  { id:9, nombre:'Córdoba Martínez Gioconda del Socorro', proyecto:'DXC', saldo:9, cedula:'155809915904', codigo:'CR2-1447', fechaIngreso:'2024-01-10',
+    vacaciones:[
+      {inicio:'2025-12-22',fin:'2025-12-22',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2026-01-04',fin:'2026-01-04',dias:1,cobertura:'Juana Díaz',notas:''}
+    ]},
+
+  // ── LSEG ──
+  { id:10, nombre:'Jiménez Vega José Andres', proyecto:'LSEG', saldo:11, cedula:'115400479', codigo:'CR1-6688', fechaIngreso:'2025-01-02',
+    vacaciones:[{inicio:'2024-12-27',fin:'2024-12-27',dias:1,cobertura:'',notas:''}]},
+  { id:11, nombre:'Castillo Henriquez Catalina', proyecto:'LSEG', saldo:11, cedula:'155836412304', codigo:'CR2-1469', fechaIngreso:'2025-01-20',
+    vacaciones:[
+      {inicio:'2024-12-23',fin:'2024-12-23',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-01-05',fin:'2025-01-05',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-09-05',fin:'2025-09-08',dias:2,cobertura:'Juana Díaz',notas:'5 y 8 Sep'},
+      {inicio:'2026-07-01',fin:'2026-07-07',dias:5,cobertura:'Juana Díaz',notas:''}
+    ]},
+  { id:12, nombre:'Solano Castro Olga María', proyecto:'LSEG', saldo:9, cedula:'401870281', codigo:'CR1-0305', fechaIngreso:'2019-05-22',
+    vacaciones:[
+      {inicio:'2024-12-16',fin:'2024-12-16',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-02-20',fin:'2025-02-26',dias:5,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-09-22',fin:'2025-09-28',dias:5,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2026-08-06',fin:'2026-08-19',dias:10,cobertura:'Juana Díaz',notas:''}
+    ]},
+
+  // ── MCK ──
+  { id:13, nombre:'Alemán Mendoza Griselda del Carmen', proyecto:'MCK', saldo:8, cedula:'155819584722', codigo:'CR1-4642', fechaIngreso:'2022-06-30',
+    vacaciones:[{inicio:'2026-01-22',fin:'2026-01-28',dias:5,cobertura:'Rocio Romero',notas:''}]},
+  { id:14, nombre:'Calderón Salas William Gerardo', proyecto:'MCK', saldo:10, cedula:'115230399', codigo:'CR1-6872', fechaIngreso:'2025-04-14', vacaciones:[] },
+  { id:15, nombre:'Duarte Fonseca Elizabeth', proyecto:'MCK', saldo:11, cedula:'155816599620', codigo:'CR1-4475', fechaIngreso:'2022-03-15',
+    vacaciones:[{inicio:'2025-12-10',fin:'2025-12-24',dias:11,cobertura:'Juana Díaz',notas:''}]},
+  { id:16, nombre:'Fernández Acevedo Jason Daniel', proyecto:'MCK', saldo:2, cedula:'402750525', codigo:'CR1-7325', fechaIngreso:'2025-10-13', vacaciones:[] },
+  { id:17, nombre:'Lobo Vargas María de los Ángeles', proyecto:'MCK', saldo:2, cedula:'108630601', codigo:'CR1-7374', fechaIngreso:'2025-11-03', vacaciones:[] },
+  { id:18, nombre:'Oviedo Torrentes Estefany', proyecto:'MCK', saldo:1, cedula:'120100494', codigo:'CR1-7515', fechaIngreso:'2026-01-15', vacaciones:[] },
+  { id:19, nombre:'Romero Angulo Rocío', proyecto:'MCK', saldo:4, cedula:'112730378', codigo:'CR1-3168', fechaIngreso:'2018-10-14',
+    vacaciones:[
+      {inicio:'2025-01-31',fin:'2025-01-31',dias:1,cobertura:'',notas:''},
+      {inicio:'2025-02-03',fin:'2025-02-03',dias:1,cobertura:'',notas:''}
+    ]},
+  { id:20, nombre:'Rosales Mendieta Joselyn Paola', proyecto:'MCK', saldo:1, cedula:'118020211', codigo:'CR1-7480', fechaIngreso:'2026-01-06', vacaciones:[] },
+  { id:21, nombre:'Ruiz Treminio Arlen Melisa', proyecto:'MCK', saldo:2, cedula:'155806587505', codigo:'CR1-2876', fechaIngreso:'2020-12-02',
+    vacaciones:[
+      {inicio:'2024-12-27',fin:'2024-12-27',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-01-05',fin:'2025-01-05',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-12-15',fin:'2025-12-21',dias:5,cobertura:'Juana Díaz',notas:''}
+    ]},
+  { id:22, nombre:'Sáenz Cruz Iris', proyecto:'MCK', saldo:4, cedula:'106840521', codigo:'CR1-6065', fechaIngreso:'2024-04-02',
+    vacaciones:[{inicio:'2026-06-18',fin:'2026-06-25',dias:6,cobertura:'Juana Díaz',notas:''}]},
+  { id:23, nombre:'Tenorio Solano Ashly Francela', proyecto:'MCK', saldo:4, cedula:'118330702', codigo:'CR1-6513', fechaIngreso:'2024-10-23', vacaciones:[] },
+  { id:24, nombre:'Zúñiga González Johana Verónica', proyecto:'MCK', saldo:9, cedula:'155820756118', codigo:'CR1-4591', fechaIngreso:'2022-05-31',
+    vacaciones:[
+      {inicio:'2025-12-15',fin:'2025-12-21',dias:5,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2026-05-29',fin:'2026-05-29',dias:1,cobertura:'Juana Díaz',notas:''}
+    ]},
+
+  // ── MULTIPARK ──
+  { id:25, nombre:'Fajardo Morán Kimberlin Dayana', proyecto:'MULTIPARK', saldo:19, cedula:'155856737021', codigo:'CR2-1638', fechaIngreso:'2025-11-17',
+    vacaciones:[
+      {inicio:'2024-12-23',fin:'2024-12-23',dias:1,cobertura:'',notas:''},
+      {inicio:'2025-01-05',fin:'2025-01-05',dias:1,cobertura:'',notas:''}
+    ]},
+  { id:26, nombre:'Rodríguez Sánchez Julia Maritza', proyecto:'MULTIPARK', saldo:3, cedula:'155856737021', codigo:'CR2-1638', fechaIngreso:'2025-11-17', vacaciones:[] },
+
+  // ── UBER BAMBU ──
+  { id:27, nombre:'Fernandez Hernández Lilliana', proyecto:'UBER BAMBU', saldo:2, cedula:'303350906', codigo:'CR2-1651', fechaIngreso:'2025-12-12', vacaciones:[] },
+  { id:28, nombre:'Tardencilla Reyes Abigail', proyecto:'UBER BAMBU', saldo:7, cedula:'', codigo:'', fechaIngreso:'',
+    vacaciones:[{inicio:'2024-11-29',fin:'2024-11-29',dias:1,cobertura:'',notas:''}]},
+
+  // ── UBER CEDRAL ──
+  { id:29, nombre:'Domínguez Narvaéz Rosa Idalia', proyecto:'UBER CEDRAL', saldo:14, cedula:'155810401823', codigo:'CR2-1159', fechaIngreso:'2020-02-29',
+    vacaciones:[
+      {inicio:'2025-01-13',fin:'2025-01-19',dias:5,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2025-10-13',fin:'2025-10-25',dias:9,cobertura:'Juana Díaz',notas:''}
+    ]},
+  { id:30, nombre:'Mena Fonseca Yesenia', proyecto:'UBER CEDRAL', saldo:7, cedula:'109460223', codigo:'CR2-1581', fechaIngreso:'2025-07-07', vacaciones:[] },
+
+  // ── UBER COE ──
+  { id:31, nombre:'Acevedo Ramos Kriseidy', proyecto:'UBER COE', saldo:5, cedula:'603660875', codigo:'CR2-1226', fechaIngreso:'2021-09-06',
+    vacaciones:[{inicio:'2025-02-24',fin:'2025-02-28',dias:5,cobertura:'',notas:''}]},
+  { id:32, nombre:'Contreras Blandón Orquidia Vanessa', proyecto:'UBER COE', saldo:3, cedula:'155844923805', codigo:'CR2-1454', fechaIngreso:'2024-11-04', vacaciones:[] },
+  { id:33, nombre:'Díaz Guadamuz Griselda María', proyecto:'UBER COE', saldo:7, cedula:'155836161334', codigo:'CR2-1439', fechaIngreso:'2023-07-20', vacaciones:[] },
+  { id:34, nombre:'Espinoza Villegas María Luisa', proyecto:'UBER COE', saldo:8, cedula:'112440122', codigo:'CR2-1569', fechaIngreso:'2025-06-09',
+    vacaciones:[{inicio:'2025-01-16',fin:'2025-01-16',dias:1,cobertura:'',notas:''}]},
+  { id:35, nombre:'Regalado Malespin David', proyecto:'UBER COE', saldo:9, cedula:'209260008', codigo:'CR2-1566', fechaIngreso:'2025-05-26', vacaciones:[] },
+  { id:36, nombre:'Torrentes Cordero Eufemia Tatiana', proyecto:'UBER COE', saldo:3, cedula:'113880143', codigo:'CR2-1455', fechaIngreso:'2024-11-04',
+    vacaciones:[
+      {inicio:'2026-02-26',fin:'2026-02-26',dias:1,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2026-03-01',fin:'2026-03-01',dias:1,cobertura:'Juana Díaz',notas:''}
+    ]},
+  { id:37, nombre:'Torres Marín Bryan Josué', proyecto:'UBER COE', saldo:10, cedula:'115760561', codigo:'CR2-1142', fechaIngreso:'2019-04-06',
+    vacaciones:[
+      {inicio:'2026-01-01',fin:'2026-01-14',dias:10,cobertura:'Juana Díaz',notas:''},
+      {inicio:'2026-02-05',fin:'2026-02-18',dias:10,cobertura:'Juana Díaz',notas:''}
+    ]},
+
+  // ── WPLACES AV ──
+  { id:38, nombre:'Reyes Sánchez Melba María', proyecto:'WPLACES AV', saldo:0, cedula:'155808383703', codigo:'CR2-1192', fechaIngreso:'2020-08-11',
+    vacaciones:[
+      {inicio:'2026-07-20',fin:'2026-08-04',dias:14,cobertura:'Juana Díaz',notas:'14 días calendario; se excluyen feriados 25 de julio y 2 de agosto'}
+    ]},
+
+  // ── OPERACIONES ──
+  { id:39, nombre:'Retana Villalobos Lilliana', proyecto:'Operaciones', saldo:0, cedula:'', codigo:'', fechaIngreso:'',
+    vacaciones:[
+      {inicio:'2024-12-23',fin:'2024-12-30',dias:6,cobertura:'',notas:''},
+      {inicio:'2025-01-13',fin:'2025-01-13',dias:1,cobertura:'',notas:''}
+    ]}
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let emps = [];
+let curEmpId = null;   // for vac modal
+let editVacIndex = null; // vacation index currently being edited
+let editEmpId = null;  // for emp modal
+let ctxId = null;      // for context menu
+
+const STORAGE_KEY = 'sbm_vac_v5';
+
+function applyDataCorrections() {
+  // Corrección confirmada: Melba Reyes debe tomar 14 días calendario,
+  // contando sábados y domingos, pero sin contar los feriados del 25 de julio y 2 de agosto.
+  const melba = emps.find(e => normalizeName(e.nombre).includes('reyes sanchez melba'));
+  if (melba) {
+    melba.proyecto = 'WPLACES AV';
+    melba.saldo = 0;
+    melba.vacaciones = [{
+      inicio: '2026-07-20',
+      fin: '2026-08-04',
+      dias: 14,
+      cobertura: 'Juana Díaz',
+      notas: '14 días calendario; se excluyen feriados 25 de julio y 2 de agosto'
+    }];
+  }
+}
+
+function normalizeName(name) {
+  return String(name || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function init() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  emps = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(SEED));
+  normalizeAllCoberturas();   // fix "Juana Diaz" → "Juana Díaz" in saved data
+  mergeSeedEmployeeFields();    // agrega fecha de ingreso si el navegador tenía una versión anterior guardada
+  applyDataCorrections();      // aplica correcciones confirmadas aunque existan datos guardados en el navegador
+  populateFilter();
+  buildLegend();
+  populateCovFilter();
+  refreshCoberturaList();
+  renderTable();
+  updateStats();
+  document.getElementById('lastUpdate').textContent = 'Guardado: ' + new Date().toLocaleDateString('es-CR');
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(emps));
+  document.getElementById('lastUpdate').textContent = 'Guardado: ' + new Date().toLocaleDateString('es-CR') + ' ' + new Date().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function fmtDate(d) {
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('es-CR', {day:'2-digit', month:'short'});
+}
+
+
+function fmtFullDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('es-CR', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+function nextAnniversary(fechaIngreso) {
+  if (!fechaIngreso) return null;
+  const base = new Date(fechaIngreso + 'T12:00:00');
+  const today = new Date();
+  let next = new Date(today.getFullYear(), base.getMonth(), base.getDate());
+  if (next < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+    next = new Date(today.getFullYear()+1, base.getMonth(), base.getDate());
+  }
+  return next.toISOString().slice(0,10);
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date();
+  const a = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const b = new Date(dateStr + 'T12:00:00');
+  return Math.round((b-a)/(1000*60*60*24));
+}
+
+function ingresoDisplay(emp) {
+  if (!emp.fechaIngreso) return '<span class="ingreso-empty">Sin fecha</span>';
+  const next = nextAnniversary(emp.fechaIngreso);
+  const left = daysUntil(next);
+  const badgeClass = left !== null && left <= 45 ? 'anniv-badge anniv-due' : 'anniv-badge';
+  const badge = left === 0 ? 'Cumple hoy' : left > 0 ? `Cumple en ${left}d` : '';
+  return `${fmtFullDate(emp.fechaIngreso)}<br><span class="${badgeClass}">${badge}</span>`;
+}
+
+function mergeSeedEmployeeFields() {
+  const seedById = new Map(SEED.map(e => [e.id, e]));
+  emps.forEach(emp => {
+    const seed = seedById.get(emp.id);
+    if (seed && !emp.fechaIngreso && seed.fechaIngreso) emp.fechaIngreso = seed.fechaIngreso;
+  });
+}
+
+function calcEaster(year) {
+  const a=year%19,b=Math.floor(year/100),c=year%100,d=Math.floor(b/4),e=b%4;
+  const f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30;
+  const i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7;
+  const m=Math.floor((a+11*h+22*l)/451);
+  const month=Math.floor((h+l-7*m+114)/31), day=((h+l-7*m+114)%31)+1;
+  return new Date(year,month-1,day);
+}
+
+function crHolidays(year) {
+  const fixed = [
+    `${year}-01-01`, `${year}-04-11`, `${year}-05-01`,
+    `${year}-07-25`, `${year}-08-02`, `${year}-08-15`,
+    `${year}-09-15`, `${year}-10-12`, `${year}-12-25`
+  ];
+  const easter = calcEaster(year);
+  const thu = new Date(easter); thu.setDate(thu.getDate()-3);
+  const fri = new Date(easter); fri.setDate(fri.getDate()-2);
+  fixed.push(thu.toISOString().slice(0,10));
+  fixed.push(fri.toISOString().slice(0,10));
+  return new Set(fixed);
+}
+
+// Cache holidays per year
+const _holidays = {};
+function isHoliday(dateStr) {
+  const y = +dateStr.slice(0,4);
+  if (!_holidays[y]) _holidays[y] = crHolidays(y);
+  return _holidays[y].has(dateStr);
+}
+
+function businessDays(s, e) {
+  let n=0, cur=new Date(s+'T12:00:00'), end=new Date(e+'T12:00:00');
+  while (cur<=end) {
+    const d=cur.getDay();
+    const ds=cur.toISOString().slice(0,10);
+    if (d!==0 && d!==6 && !isHoliday(ds)) n++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return n;
+}
+
+function vacationDaysCR(s, e) {
+  // Regla operativa: cuenta días calendario, incluyendo sábados y domingos,
+  // pero excluye feriados nacionales de Costa Rica.
+  let n=0, cur=new Date(s+'T12:00:00'), end=new Date(e+'T12:00:00');
+  while (cur<=end) {
+    const ds=cur.toISOString().slice(0,10);
+    if (!isHoliday(ds)) n++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return n;
+}
+
+function vacsInMonth(emp, y, m) {
+  return (emp.vacaciones||[]).filter(v => {
+    const s = new Date(v.inicio+'T12:00:00'), e = new Date(v.fin+'T12:00:00');
+    const mStart = new Date(y, m-1, 1), mEnd = new Date(y, m, 0);
+    return s <= mEnd && e >= mStart;
+  });
+}
+
+function getMonths() {
+  const ys = +document.getElementById('yearFrom').value;
+  const ye = +document.getElementById('yearTo').value;
+  const out = [];
+  for (let y = ys; y <= ye; y++)
+    for (let mo = 1; mo <= 12; mo++) out.push({y, mo});
+  return out;
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function renderTable() {
+  const filter = document.getElementById('filterProy').value;
+  const search = (document.getElementById('searchEmp')?.value || '').trim().toLowerCase();
+  const months = getMonths();
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth()+1;
+
+  const rows = emps.filter(e => {
+      const matchesProject = !filter || e.proyecto === filter;
+      const haystack = `${e.nombre||''} ${e.codigo||''} ${e.cedula||''}`.toLowerCase();
+      const matchesSearch = !search || haystack.includes(search);
+      return matchesProject && matchesSearch;
+    })
+    .sort((a,b) => a.proyecto.localeCompare(b.proyecto) || a.nombre.localeCompare(b.nombre));
+
+  // ── HEAD
+  let hHtml = '<tr>';
+  hHtml += '<th class="sticky-col th-nombre">Funcionario</th>';
+  hHtml += '<th class="th-proy">Proyecto</th>';
+  hHtml += '<th class="th-saldo">Saldo</th>';
+  hHtml += '<th class="th-ingreso">Ingreso</th>';
+  hHtml += '<th class="th-actions">Acciones</th>';
+  months.forEach(({y,mo}) => {
+    const cur = y===curY && mo===curM;
+    hHtml += `<th class="th-month${cur?' current-mo':''}">${MONTHS[mo-1]}<br>${y}</th>`;
+  });
+  hHtml += '</tr>';
+  document.getElementById('tHead').innerHTML = hHtml;
+
+  // ── BODY
+  let bHtml = '';
+  let lastProy = null;
+
+  rows.forEach(emp => {
+    if (emp.proyecto !== lastProy) {
+      lastProy = emp.proyecto;
+      const c = PC[emp.proyecto]||'#666';
+      bHtml += `<tr class="group-row"><td colspan="${months.length+5}" style="border-left:4px solid ${c}; padding-left:14px">
+        ${emp.proyecto}
+      </td></tr>`;
+    }
+
+    const c = PC[emp.proyecto]||'#666';
+    const s = emp.saldo||0;
+    const sCls = s < 0 ? 'saldo-high' : s===0 ? 'saldo-0' : s<=5 ? 'saldo-low' : s<=10 ? 'saldo-med' : 'saldo-high';
+    const sLbl = s < 0 ? `⚠${s}` : `${s}`;
+
+    bHtml += `<tr oncontextmenu="showCtx(event,${emp.id})">`;
+
+    // Sticky name cell
+    bHtml += `<td class="sticky-col" style="padding:0">
+      <div class="td-nombre" onclick="openVacModal(${emp.id}, null)" title="Programar vacaciones · clic derecho para más opciones">
+        <span class="proj-strip" style="background:${c}"></span>
+        <span class="name-text">${emp.nombre}</span>
+      </div>
+    </td>`;
+
+    bHtml += `<td class="td-proyecto"><span class="badge" style="background:${c}">${emp.proyecto}</span></td>`;
+    bHtml += `<td class="td-saldo"><span class="${sCls}" title="${s} días de vacaciones pendientes">${sLbl}</span></td>`;
+    bHtml += `<td class="td-ingreso" title="Fecha de ingreso y próximo aniversario">${ingresoDisplay(emp)}</td>`;
+    bHtml += `<td class="td-actions">
+      <div class="emp-actions">
+        <button class="icon-btn" onclick="event.stopPropagation(); openEditEmp(${emp.id})" title="Editar funcionario">✏️</button>
+        <button class="icon-btn danger" onclick="event.stopPropagation(); deleteEmpById(${emp.id})" title="Eliminar funcionario">🗑</button>
+      </div>
+    </td>`;
+
+    months.forEach(({y,mo}) => {
+      const vacs = vacsInMonth(emp, y, mo);
+      const cur = y===curY && mo===curM;
+      let inner = '';
+      vacs.forEach(v => {
+        // Clip displayed days to THIS month's boundaries
+        const mStart = new Date(y, mo-1, 1);
+        const mEnd   = new Date(y, mo, 0);
+        const vS = new Date(v.inicio+'T12:00:00');
+        const vE = new Date(v.fin+'T12:00:00');
+        const dispS = vS < mStart ? mStart : vS;
+        const dispE = vE > mEnd   ? mEnd   : vE;
+        const sd = dispS.getDate(), ed = dispE.getDate();
+        const lbl = sd===ed ? `${sd}` : `${sd}›${ed}`;
+        const continuesPrev = vS < mStart;
+        const continuesNext = vE > mEnd;
+        const prefix = continuesPrev ? '◀' : '';
+        const suffix = continuesNext ? '▶' : '';
+        const tip = `${fmtDate(v.inicio)} al ${fmtDate(v.fin)} · ${v.dias}d${v.cobertura?' · '+v.cobertura:''}${v.notas?' · '+v.notas:''}`;
+        inner += `<span class="vac-pill" style="background:${c};opacity:${continuesPrev||continuesNext?0.85:1}" onclick="openVacModal(${emp.id},'${y}-${String(mo).padStart(2,'0')}')" title="${tip}">${prefix}${lbl}${suffix}</span>`;
+      });
+      const ymStr = `'${y}-${String(mo).padStart(2,'0')}'`;
+      bHtml += `<td class="month-cell${cur?' current-mo-cell':''}" onclick="openVacModal(${emp.id},${ymStr})">${inner}</td>`;
+    });
+
+    bHtml += '</tr>';
+  });
+
+  if (!rows.length) {
+    bHtml = `<tr><td colspan="${months.length+5}" style="text-align:center;padding:40px;color:#9ca3af">Sin funcionarios para mostrar con los filtros actuales.</td></tr>`;
+  }
+
+  document.getElementById('tBody').innerHTML = bHtml;
+  updateStats();
+}
+
+function updateStats() {
+  const total = emps.length;
+  const pending = emps.reduce((s,e)=>s+(e.saldo||0),0);
+  const sched = emps.reduce((s,e)=>s+(e.vacaciones||[]).length,0);
+  const alerts = emps.filter(e=>(e.saldo||0)>10).length;
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sPending').textContent = pending;
+  document.getElementById('sScheduled').textContent = sched;
+  document.getElementById('sAlerts').textContent = alerts;
+}
+
+function clearFilters() {
+  document.getElementById('filterProy').value = '';
+  const search = document.getElementById('searchEmp');
+  if (search) search.value = '';
+  renderTable();
+}
+
+function populateFilter() {
+  const proyects = [...new Set(emps.map(e=>e.proyecto))].sort();
+  const sel = document.getElementById('filterProy');
+  proyects.forEach(p => { const o = document.createElement('option'); o.value=p; o.textContent=p; sel.appendChild(o); });
+}
+
+function buildLegend() {
+  const proyects = [...new Set(emps.map(e=>e.proyecto))].sort();
+  const leg = document.getElementById('legend');
+  proyects.forEach(p => {
+    const c = PC[p]||'#666';
+    const div = document.createElement('div');
+    div.className = 'leg-item';
+    div.innerHTML = `<div class="leg-dot" style="background:${c}"></div>${p}`;
+    div.onclick = () => { document.getElementById('filterProy').value = p; renderTable(); };
+    leg.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════
+// VACATION MODAL
+// ═══════════════════════════════════════════
+function openVacModal(empId, ym) {
+  curEmpId = empId;
+  editVacIndex = null;
+  setVacFormMode('add');
+
+  // Populate project dropdown
+  const proyList = [...new Set(emps.map(e=>e.proyecto))].sort();
+  const vProy = document.getElementById('vProy');
+  vProy.innerHTML = '<option value="">— Seleccione —</option>';
+  proyList.forEach(p => { const o=document.createElement('option'); o.value=p; o.textContent=p; vProy.appendChild(o); });
+
+  if (empId) {
+    const emp = emps.find(e=>e.id===empId);
+    if (emp) {
+      vProy.value = emp.proyecto;
+      populateVacEmpList(emp.proyecto);
+      document.getElementById('vEmp').value = empId;
+      showVacEmpInfo(emp);
+    }
+  } else {
+    document.getElementById('vEmp').innerHTML = '<option value="">— Seleccione proyecto primero —</option>';
+    hideVacEmpInfo();
+    document.getElementById('vacListBox').innerHTML = '<div class="vac-list-empty">Seleccione un empleado</div>';
+  }
+
+  // default dates
+  const n = new Date();
+  if (ym) {
+    const [y,m] = ym.split('-');
+    document.getElementById('vStart').value = `${y}-${m}-01`;
+    document.getElementById('vEnd').value   = `${y}-${m}-05`;
+  } else {
+    const yy=n.getFullYear(), mm=String(n.getMonth()+1).padStart(2,'0');
+    document.getElementById('vStart').value = `${yy}-${mm}-01`;
+    document.getElementById('vEnd').value   = `${yy}-${mm}-05`;
+  }
+  document.getElementById('vDias').value='';
+  document.getElementById('vCobertura').value='Juana Díaz';
+  document.getElementById('vNotas').value='';
+  document.getElementById('autoDaysHint').style.display='none';
+  document.getElementById('vacSub').textContent = '';
+  autoCalc();
+
+  if (empId) {
+    const emp = emps.find(e=>e.id===empId);
+    if (emp) renderVacList(emp);
+  }
+
+  document.getElementById('vacOverlay').classList.add('open');
+}
+
+function populateVacEmpList(proyecto) {
+  const sel = document.getElementById('vEmp');
+  const list = emps.filter(e=>e.proyecto===proyecto).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  sel.innerHTML = '<option value="">— Seleccione empleado —</option>';
+  list.forEach(e => {
+    const o = document.createElement('option');
+    o.value = e.id;
+    o.textContent = `${e.nombre}${e.codigo ? '  ['+e.codigo+']' : ''}`;
+    sel.appendChild(o);
+  });
+}
+
+function onVacProyChange() {
+  const p = document.getElementById('vProy').value;
+  if (!p) { document.getElementById('vEmp').innerHTML='<option value="">— Seleccione proyecto primero —</option>'; hideVacEmpInfo(); return; }
+  populateVacEmpList(p);
+  hideVacEmpInfo();
+  curEmpId = null;
+  document.getElementById('vacListBox').innerHTML='<div class="vac-list-empty">Seleccione un empleado</div>';
+}
+
+function onVacEmpChange() {
+  const id = +document.getElementById('vEmp').value;
+  if (!id) { hideVacEmpInfo(); curEmpId=null; return; }
+  curEmpId = id;
+  const emp = emps.find(e=>e.id===id);
+  if (emp) { showVacEmpInfo(emp); renderVacList(emp); }
+}
+
+function showVacEmpInfo(emp) {
+  document.getElementById('vInfoCodigo').textContent = emp.codigo || '—';
+  document.getElementById('vInfoCedula').textContent = emp.cedula || '—';
+  const sEl = document.getElementById('vInfoSaldo');
+  sEl.textContent = emp.saldo||0;
+  sEl.style.color = (emp.saldo||0) < 0 ? '#B71C1C' : (emp.saldo||0) > 10 ? '#B71C1C' : (emp.saldo||0) > 5 ? '#E65100' : '#2E7D32';
+  document.getElementById('vEmpInfo').style.display = 'flex';
+}
+
+function hideVacEmpInfo() {
+  document.getElementById('vEmpInfo').style.display = 'none';
+}
+
+function renderVacList(emp) {
+  const box = document.getElementById('vacListBox');
+  if (!emp.vacaciones||!emp.vacaciones.length) {
+    box.innerHTML = '<div class="vac-list-empty">Sin vacaciones programadas</div>';
+    return;
+  }
+  const sorted = [...emp.vacaciones].map((v,i)=>({...v,_i:i})).sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  box.innerHTML = sorted.map(v => {
+    const recalculated = vacationDaysCR(v.inicio, v.fin);
+    const warn = recalculated !== Number(v.dias || 0) ? ` · ⚠ Calculado: ${recalculated}` : '';
+    return `<div class="vac-item">
+      <div class="info">
+        <div class="dates">📅 ${fmtDate(v.inicio)} al ${fmtDate(v.fin)}</div>
+        <div class="days">${v.dias} día(s)${warn}${v.cobertura ? ' · Cubre: '+v.cobertura : ''}${v.notas ? ' · '+v.notas : ''}</div>
+      </div>
+      <div class="actions">
+        <button class="mini-btn" onclick="editVac(${emp.id},${v._i})" title="Editar este período">✏️ Editar</button>
+        <button class="mini-btn" onclick="duplicateVac(${emp.id},${v._i})" title="Duplicar este período para ajustarlo">⧉ Duplicar</button>
+        <button class="mini-btn danger" onclick="delVac(${emp.id},${v._i})" title="Eliminar">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setVacFormMode(mode) {
+  const editing = mode === 'edit';
+  document.getElementById('vacFormTitle').textContent = editing ? 'Editar período seleccionado' : 'Agregar período';
+  document.getElementById('saveVacBtn').textContent = editing ? '✔ Guardar cambios' : '✔ Guardar vacaciones';
+  document.getElementById('cancelEditVacBtn').style.display = editing ? 'inline-flex' : 'none';
+}
+
+function cancelEditVac() {
+  editVacIndex = null;
+  setVacFormMode('add');
+  document.getElementById('vStart').value = '';
+  document.getElementById('vEnd').value = '';
+  document.getElementById('vDias').value = '';
+  document.getElementById('vCobertura').value = 'Juana Díaz';
+  document.getElementById('vNotas').value = '';
+  document.getElementById('autoDaysHint').style.display = 'none';
+}
+
+function editVac(empId, idx) {
+  const emp = emps.find(e=>e.id===empId);
+  if (!emp || !emp.vacaciones || !emp.vacaciones[idx]) return;
+  curEmpId = empId;
+  editVacIndex = idx;
+  const v = emp.vacaciones[idx];
+  document.getElementById('vStart').value = v.inicio || '';
+  document.getElementById('vEnd').value = v.fin || '';
+  document.getElementById('vDias').value = v.dias || '';
+  document.getElementById('vCobertura').value = v.cobertura || '';
+  document.getElementById('vNotas').value = v.notas || '';
+  setVacFormMode('edit');
+  autoCalc();
+}
+
+function duplicateVac(empId, idx) {
+  const emp = emps.find(e=>e.id===empId);
+  if (!emp || !emp.vacaciones || !emp.vacaciones[idx]) return;
+  const v = emp.vacaciones[idx];
+  curEmpId = empId;
+  editVacIndex = null;
+  document.getElementById('vStart').value = v.inicio || '';
+  document.getElementById('vEnd').value = v.fin || '';
+  document.getElementById('vDias').value = v.dias || '';
+  document.getElementById('vCobertura').value = v.cobertura || '';
+  document.getElementById('vNotas').value = (v.notas ? v.notas + ' · ' : '') + 'Duplicado para ajustar';
+  setVacFormMode('add');
+  autoCalc();
+}
+
+function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+  return aStart <= bEnd && aEnd >= bStart;
+}
+
+function validateVacOverlap(emp, inicio, fin, ignoreIdx=null) {
+  return (emp.vacaciones || []).some((v, idx) => idx !== ignoreIdx && rangesOverlap(inicio, fin, v.inicio, v.fin));
+}
+
+function autoCalc() {
+  const s = document.getElementById('vStart').value;
+  const e = document.getElementById('vEnd').value;
+  const hint = document.getElementById('autoDaysHint');
+  if (s && e && e >= s) {
+    const bd = vacationDaysCR(s, e);
+    // Count calendar days and holidays in range
+    let cal=0, hols=0, cur=new Date(s+'T12:00:00'), end=new Date(e+'T12:00:00');
+    while(cur<=end){ cal++; if(isHoliday(cur.toISOString().slice(0,10))) hols++; cur.setDate(cur.getDate()+1); }
+    document.getElementById('vDias').value = bd;
+    hint.textContent = `= ${bd} días de vacaciones (${cal} calendario${hols?' · '+hols+' feriado(s) excluido(s)':''})`;
+    hint.style.display = 'block';
+    hint.style.color = hols > 0 ? '#E65100' : '#2E7D32';
+  } else {
+    hint.style.display = 'none';
+  }
+}
+
+function saveVac() {
+  if (!curEmpId) { alert('Seleccione un empleado primero.'); return; }
+  const emp = emps.find(e=>e.id===curEmpId);
+  if (!emp) return;
+  const inicio = document.getElementById('vStart').value;
+  const fin    = document.getElementById('vEnd').value;
+  let dias = parseInt(document.getElementById('vDias').value);
+  const cob  = document.getElementById('vCobertura').value.trim();
+  const nota = document.getElementById('vNotas').value.trim();
+  if (!inicio||!fin) { alert('Ingrese las fechas.'); return; }
+  if (fin<inicio)    { alert('La fecha fin debe ser mayor o igual a la fecha inicio.'); return; }
+  if (!dias||isNaN(dias)) dias = vacationDaysCR(inicio, fin);
+  if (dias <= 0) { alert('El período seleccionado no genera días de vacaciones porque solo contiene feriados o fechas no válidas.'); return; }
+  if (!emp.vacaciones) emp.vacaciones=[];
+
+  const isEditing = editVacIndex !== null && emp.vacaciones[editVacIndex];
+  if (validateVacOverlap(emp, inicio, fin, isEditing ? editVacIndex : null)) {
+    const ok = confirm('Este período se traslapa con vacaciones ya registradas para esta persona. ¿Desea guardarlo de todos modos?');
+    if (!ok) return;
+  }
+
+  if (isEditing) {
+    const old = emp.vacaciones[editVacIndex];
+    const oldDias = Number(old.dias || 0);
+    emp.vacaciones[editVacIndex] = {inicio, fin, dias, cobertura:cob, notas:nota};
+    emp.saldo = (emp.saldo||0) + oldDias - dias; // devuelve lo anterior y descuenta lo nuevo
+  } else {
+    emp.vacaciones.push({inicio, fin, dias, cobertura:cob, notas:nota});
+    emp.saldo = (emp.saldo||0) - dias;
+  }
+
+  editVacIndex = null;
+  setVacFormMode('add');
+  persist();
+  populateCovFilter();
+  refreshCoberturaList();
+  showVacEmpInfo(emp);
+  renderVacList(emp);
+  document.getElementById('vDias').value='';
+  document.getElementById('vCobertura').value='';
+  document.getElementById('vNotas').value='';
+  renderTable();
+}
+
+function delVac(empId, idx) {
+  const emp = emps.find(e=>e.id===empId);
+  const v = emp.vacaciones[idx];
+  if (!confirm(`¿Eliminar vacaciones del ${fmtDate(v.inicio)} al ${fmtDate(v.fin)}?`)) return;
+  emp.saldo = (emp.saldo||0) + v.dias;
+  emp.vacaciones.splice(idx, 1);
+  persist();
+  renderVacList(emp);
+  showVacEmpInfo(emp);
+  renderTable();
+}
+
+function closeVac() {
+  document.getElementById('vacOverlay').classList.remove('open');
+  curEmpId = null;
+  editVacIndex = null;
+  setVacFormMode('add');
+}
+
+// ═══════════════════════════════════════════
+// EMPLOYEE MODAL
+// ═══════════════════════════════════════════
+function openAddEmp() {
+  editEmpId = null;
+  document.getElementById('empTitle').textContent = 'Agregar Funcionario';
+  document.getElementById('empSub').textContent = 'Nuevo funcionario';
+  document.getElementById('eName').value='';
+  document.getElementById('eProy').value='MCK';
+  document.getElementById('eSaldo').value='0';
+  document.getElementById('eCedula').value='';
+  document.getElementById('eCodigo').value='';
+  document.getElementById('eIngreso').value='';
+  document.getElementById('deleteEmpBtn').style.display='none';
+  document.getElementById('empOverlay').classList.add('open');
+}
+
+function openEditEmp(empId) {
+  editEmpId = empId;
+  const emp = emps.find(e=>e.id===empId);
+  if (!emp) return;
+  document.getElementById('empTitle').textContent = 'Editar Funcionario';
+  document.getElementById('empSub').textContent = emp.nombre;
+  document.getElementById('eName').value = emp.nombre;
+  document.getElementById('eProy').value = emp.proyecto;
+  document.getElementById('eSaldo').value = emp.saldo||0;
+  document.getElementById('eCedula').value = emp.cedula||'';
+  document.getElementById('eCodigo').value = emp.codigo||'';
+  document.getElementById('eIngreso').value = emp.fechaIngreso||'';
+  document.getElementById('deleteEmpBtn').style.display='inline-flex';
+  document.getElementById('empOverlay').classList.add('open');
+}
+
+function saveEmp() {
+  const nombre = document.getElementById('eName').value.trim();
+  if (!nombre) { alert('Ingrese el nombre.'); return; }
+  const proy   = document.getElementById('eProy').value;
+  const saldo  = parseInt(document.getElementById('eSaldo').value)||0;
+  const cedula = document.getElementById('eCedula').value.trim();
+  const codigo = document.getElementById('eCodigo').value.trim();
+  const fechaIngreso = document.getElementById('eIngreso').value;
+  if (editEmpId) {
+    const emp = emps.find(e=>e.id===editEmpId);
+    if (emp) Object.assign(emp, {nombre, proyecto:proy, saldo, cedula, codigo, fechaIngreso});
+  } else {
+    const maxId = Math.max(0,...emps.map(e=>e.id));
+    emps.push({id:maxId+1, nombre, proyecto:proy, saldo, cedula, codigo, fechaIngreso, vacaciones:[]});
+  }
+  persist();
+  refreshProjectUI();
+  closeEmp();
+  renderTable();
+}
+
+function refreshProjectUI() {
+  const current = document.getElementById('filterProy').value;
+  const sel = document.getElementById('filterProy');
+  sel.innerHTML = '<option value="">Todos</option>';
+  populateFilter();
+  if ([...sel.options].some(o => o.value === current)) sel.value = current;
+
+  const leg = document.getElementById('legend');
+  leg.innerHTML = '<span>Proyectos:</span>';
+  buildLegend();
+  populateCovFilter();
+  refreshCoberturaList();
+}
+
+function deleteEmpById(empId) {
+  editEmpId = empId;
+  deleteEmp();
+}
+
+function deleteEmp() {
+  const emp = emps.find(e=>e.id===editEmpId);
+  if (!emp) return;
+  const vacCount = (emp.vacaciones || []).length;
+  const extra = vacCount ? `\n\nEste funcionario tiene ${vacCount} período(s) de vacaciones registrado(s). También se eliminarán.` : '';
+  if (!confirm(`¿Eliminar a "${emp.nombre}"?${extra}`)) return;
+  emps = emps.filter(e=>e.id!==editEmpId);
+  persist();
+  refreshProjectUI();
+  closeEmp();
+  renderTable();
+}
+
+function closeEmp() {
+  document.getElementById('empOverlay').classList.remove('open');
+  editEmpId = null;
+}
+
+// ═══════════════════════════════════════════
+// CONTEXT MENU
+// ═══════════════════════════════════════════
+function showCtx(e, empId) {
+  e.preventDefault();
+  ctxId = empId;
+  const menu = document.getElementById('ctxMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top  = e.clientY + 'px';
+  menu.style.display = 'block';
+}
+function ctxVac()    { hideCtx(); openVacModal(ctxId, null); }
+function ctxEdit()   { hideCtx(); openEditEmp(ctxId); }
+function ctxDelete() { hideCtx(); editEmpId = ctxId; deleteEmp(); }
+function hideCtx()   { document.getElementById('ctxMenu').style.display='none'; ctxId=null; }
+
+// ═══════════════════════════════════════════
+// EXPORT / IMPORT / RESET
+// ═══════════════════════════════════════════
+function exportJSON() {
+  const data = JSON.stringify(emps, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data],{type:'application/json'}));
+  a.download = `vacaciones_sbm_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(ev) {
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (confirm(`¿Importar ${d.length} funcionarios? Esto reemplaza los datos actuales.`)) {
+        emps = d; persist(); location.reload();
+      }
+    } catch { alert('Archivo JSON inválido.'); }
+  };
+  r.readAsText(f);
+  ev.target.value='';
+}
+
+function resetData() {
+  if (!confirm('¿Restaurar los datos originales? Se perderán todos los cambios guardados.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ═══════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════
+document.getElementById('vacOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeVac(); });
+document.getElementById('empOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeEmp(); });
+document.addEventListener('click', e => { if(!e.target.closest('.ctx-menu')) hideCtx(); });
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') { closeVac(); closeEmp(); hideCtx(); }
+});
+
+// ═══════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name === 'cov') renderCoverage();
+}
+
+// ═══════════════════════════════════════════
+// COVERAGE VIEW
+// ═══════════════════════════════════════════
+let covDays = 7;
+
+function setCovDays(d) {
+  covDays = d;
+  document.querySelectorAll('.days-pill').forEach(b => {
+    b.classList.toggle('active', +b.dataset.days === d);
+  });
+  renderCoverage();
+}
+
+function normalizeName(n) {
+  if (!n) return n;
+  // Normalize common variants without accents → with accents
+  return n.trim()
+    .replace(/\bJuana Diaz\b/gi, 'Juana Díaz')
+    .replace(/\bRocio Romero\b/gi, 'Rocio Romero');
+}
+
+function normalizeAllCoberturas() {
+  let changed = false;
+  emps.forEach(emp => {
+    (emp.vacaciones||[]).forEach(v => {
+      const fixed = normalizeName(v.cobertura);
+      if (fixed !== v.cobertura) { v.cobertura = fixed; changed = true; }
+    });
+  });
+  if (changed) persist();
+}
+
+function refreshCoberturaList() {
+  // Build unique sorted list from existing data + defaults
+  const names = new Set(['Juana Díaz', 'Rocio Romero']);
+  emps.forEach(emp => (emp.vacaciones||[]).forEach(v => { if(v.cobertura && v.cobertura.trim()) names.add(v.cobertura.trim()); }));
+  const dl = document.getElementById('coberturaList');
+  dl.innerHTML = [...names].sort().map(n=>`<option value="${n}">`).join('');
+}
+
+function populateCovFilter() {
+  const backups = new Set();
+  emps.forEach(e => (e.vacaciones||[]).forEach(v => { if(v.cobertura && v.cobertura.trim()) backups.add(v.cobertura.trim()); }));
+  const sel = document.getElementById('covFilter');
+  // keep existing first option, rebuild rest
+  while (sel.options.length > 1) sel.remove(1);
+  [...backups].sort().forEach(b => { const o = document.createElement('option'); o.value=b; o.textContent=b; sel.appendChild(o); });
+}
+
+function renderCoverage() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() + covDays);
+  const filterBackup = document.getElementById('covFilter').value;
+
+  // Collect all relevant vacation periods
+  const entries = [];
+  emps.forEach(emp => {
+    (emp.vacaciones||[]).forEach(v => {
+      if (!v.cobertura || !v.cobertura.trim()) return;
+      if (filterBackup && v.cobertura.trim() !== filterBackup) return;
+      const start = new Date(v.inicio+'T12:00:00'); start.setHours(0,0,0,0);
+      const end   = new Date(v.fin+'T12:00:00');   end.setHours(0,0,0,0);
+      // Include if period overlaps the [now, cutoff] window
+      if (end >= now && start <= cutoff) {
+        entries.push({ emp, v, start, end });
+      }
+    });
+  });
+
+  // Group by backup person
+  const groups = {};
+  entries.forEach(e => {
+    const key = e.v.cobertura.trim();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(e);
+  });
+
+  const grid = document.getElementById('covGrid');
+
+  if (!Object.keys(groups).length) {
+    grid.innerHTML = `<div class="cov-empty"><div class="big">🎉</div><div>No hay coberturas programadas en los próximos ${covDays} días.</div></div>`;
+    return;
+  }
+
+  // Sort groups alphabetically, sort entries within by start date
+  grid.innerHTML = Object.keys(groups).sort().map(backup => {
+    const sorted = groups[backup].sort((a,b) => a.start - b.start);
+    const c = PC[sorted[0].emp.proyecto] || '#1a3a5c';
+
+    const rows = sorted.map(({emp, v, start, end}) => {
+      const startDay  = start.getDate();
+      const startMon  = MONTHS[start.getMonth()];
+      const isToday   = start <= now && end >= now;
+      const daysUntil = Math.ceil((start - now) / 86400000);
+      let tag = '';
+      if (isToday) tag = '<span class="tag-today">HOY</span>';
+      else if (daysUntil <= 3) tag = '<span class="tag-soon">Pronto</span>';
+      else tag = '<span class="tag-upcoming">Próximo</span>';
+
+      const borderClass = isToday ? 'today-line' : 'future-line';
+      const projColor = PC[emp.proyecto] || '#666';
+      const endStr = start.toDateString() === end.toDateString() ? '' : ` al ${end.getDate()} ${MONTHS[end.getMonth()]}`;
+
+      return `<div class="cov-entry ${borderClass}">
+        <div class="date-block">
+          <div class="day">${startDay}</div>
+          <div class="mon">${startMon}</div>
+        </div>
+        <div class="info">
+          <div class="emp-name">${emp.nombre} ${tag}</div>
+          <div class="meta">
+            <span class="badge" style="background:${projColor}">${emp.proyecto}</span>
+            &nbsp;${fmtDate(v.inicio)}${endStr}
+            ${v.notas ? '· '+v.notas : ''}
+          </div>
+        </div>
+        <span class="days-badge" style="background:${projColor}">${v.dias}d</span>
+      </div>`;
+    }).join('');
+
+    // Color card header based on backup
+    const hue = hashColor(backup);
+
+    return `<div class="cov-card">
+      <div class="cov-card-head" style="background:${hue}; color:white">
+        <div class="person"><span class="icon">👤</span>${backup}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="count">${sorted.length} cobertura${sorted.length>1?'s':''}</span>
+          <button class="print-btn" onclick="printCoverage('${backup.replace(/'/g,"\\'")}')">🖨 Imprimir</button>
+        </div>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+function hashColor(str) {
+  // Generate a consistent dark color from a string
+  const colors = ['#0f3460','#1a3a5c','#2d4a22','#4a1942','#3d2b00','#1a3d4f','#3d1a00','#0d3b2e'];
+  let h = 0; for (let i=0;i<str.length;i++) h = str.charCodeAt(i) + ((h<<5)-h);
+  return colors[Math.abs(h) % colors.length];
+}
+
+// ═══════════════════════════════════════════
+// PRINT COVERAGE SHEET
+// ═══════════════════════════════════════════
+function printCoverage(backup) {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const filterDays = covDays;
+  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() + filterDays);
+
+  // Gather ALL future entries for this backup (not limited by covDays filter)
+  const entries = [];
+  emps.forEach(emp => {
+    (emp.vacaciones||[]).forEach(v => {
+      if (!v.cobertura || v.cobertura.trim() !== backup) return;
+      const start = new Date(v.inicio+'T12:00:00'); start.setHours(0,0,0,0);
+      const end   = new Date(v.fin+'T12:00:00');   end.setHours(0,0,0,0);
+      if (end >= now) entries.push({emp, v, start, end});
+    });
+  });
+  entries.sort((a,b) => a.start - b.start);
+
+  // Build table rows
+  const rows = entries.map(({emp, v, start, end}) => {
+    const projColor = PC[emp.proyecto]||'#666';
+    const isToday = start <= now && end >= now;
+    const daysLeft = Math.ceil((start - now) / 86400000);
+    let status = isToday
+      ? '<span style="background:#E65100;color:white;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">EN CURSO</span>'
+      : daysLeft <= 3
+        ? `<span style="background:#F57F17;color:white;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">En ${daysLeft}d</span>`
+        : `<span style="background:#1565C0;color:white;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">En ${daysLeft}d</span>`;
+
+    const dateRange = start.toDateString() === end.toDateString()
+      ? new Date(v.inicio+'T12:00:00').toLocaleDateString('es-CR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+      : `${new Date(v.inicio+'T12:00:00').toLocaleDateString('es-CR',{weekday:'short',day:'2-digit',month:'short'})} al ${new Date(v.fin+'T12:00:00').toLocaleDateString('es-CR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})}`;
+
+    return `<tr>
+      <td>${status}</td>
+      <td style="font-weight:600">${emp.nombre}</td>
+      <td><span class="ps-badge" style="background:${projColor}">${emp.proyecto}</span></td>
+      <td>${dateRange}</td>
+      <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace">${v.dias}d</td>
+      <td style="color:#6b7280;font-size:12px">${v.notas||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const today = new Date().toLocaleDateString('es-CR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+
+  document.getElementById('ps-meta').textContent = `Generado el ${today} · Período: próximos ${filterDays} días`;
+  document.getElementById('ps-person').innerHTML = `👤 ${backup}`;
+  document.getElementById('ps-name-bar').textContent = backup;
+  document.getElementById('ps-footer-left').textContent = `${entries.length} cobertura(s) programada(s) · Generado ${today}`;
+
+  document.getElementById('ps-body').innerHTML = entries.length ? `
+    <table>
+      <thead>
+        <tr>
+          <th style="width:80px">Estado</th>
+          <th>Funcionario</th>
+          <th>Proyecto</th>
+          <th>Fechas</th>
+          <th style="width:50px;text-align:center">Días</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="margin-top:24px; padding:14px; background:#f8f9fa; border-radius:6px; border-left:4px solid #1e88e5; font-size:12px; color:#374151">
+      <strong>Nota:</strong> Este documento lista todas las vacaciones que requieren su cobertura con fecha igual o posterior a hoy.
+      Por favor confirme su disponibilidad con la jefatura.
+    </div>
+  ` : `<div style="text-align:center;padding:40px;color:#9ca3af">Sin coberturas programadas pendientes para ${backup}.</div>`;
+
+  document.getElementById('printSheet').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closePrint() {
+  document.getElementById('printSheet').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
