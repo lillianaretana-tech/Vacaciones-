@@ -8,27 +8,28 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg: #f4f5f7;
-  --surface: #ffffff;
-  --border: #e2e5ea;
-  --text: #1a1d23;
-  --text-muted: #6b7280;
-  --header-bg: #0f1f3d;
-  --header-accent: #1e88e5;
-  --c-advant: #1565C0;
-  --c-bayer: #E65100;
-  --c-dxc: #6A1B9A;
-  --c-lseg: #2E7D32;
-  --c-mck: #B71C1C;
-  --c-multipark: #00695C;
-  --c-uberbambu: #F57F17;
-  --c-ubercedral: #BF360C;
-  --c-ubercoe: #4E342E;
-  --c-wplaces: #880E4F;
-  --c-ops: #37474F;
+  --bg: #0d0f1a;
+  --surface: #1c2038;
+  --surface-2: #232740;
+  --border: #2a2f4a;
+  --text: #dde3f0;
+  --text-muted: #7a84a0;
+  --header-bg: #090c18;
+  --header-accent: #4f9cf9;
+  --c-advant: #4f9cf9;
+  --c-bayer: #fb923c;
+  --c-dxc: #a78bfa;
+  --c-lseg: #4ade80;
+  --c-mck: #f87171;
+  --c-multipark: #2dd4bf;
+  --c-uberbambu: #fbbf24;
+  --c-ubercedral: #f97316;
+  --c-ubercoe: #a8a29e;
+  --c-wplaces: #f472b6;
+  --c-ops: #94a3b8;
   --radius: 6px;
-  --shadow: 0 1px 4px rgba(0,0,0,0.09);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.14);
+  --shadow: 0 1px 6px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -78,7 +79,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 
 /* ── TOOLBAR ── */
 .toolbar {
-  background: var(--surface);
+  background: #0f1220;
   border-bottom: 1px solid var(--border);
   padding: 8px 20px;
   display: flex;
@@ -96,6 +97,7 @@ select, input[type="text"] {
   background: var(--surface);
   color: var(--text);
   outline: none;
+  color-scheme: dark;
 }
 select:focus, input:focus { border-color: var(--header-accent); }
 .sep { width: 1px; background: var(--border); height: 24px; margin: 0 4px; }
@@ -115,14 +117,14 @@ select:focus, input:focus { border-color: var(--header-accent); }
 .btn:hover { filter: brightness(1.1); }
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: var(--header-bg); color: white; }
-.btn-secondary { background: #f0f2f5; color: var(--text); border: 1px solid var(--border); }
+.btn-secondary { background: #1e2235; color: var(--text); border: 1px solid var(--border); }
 .btn-success { background: #2E7D32; color: white; }
 .btn-danger  { background: #B71C1C; color: white; }
 .btn-info    { background: #0277BD; color: white; }
 
 /* ── LEGEND ── */
 .legend {
-  background: var(--surface);
+  background: #0f1220;
   padding: 6px 20px;
   display: flex;
   gap: 12px;
@@ -159,6 +161,7 @@ select:focus, input:focus { border-color: var(--header-accent); }
 table {
   border-collapse: collapse;
   background: var(--surface);
+  color: #e8edf8;
   min-width: 900px;
   width: 100%;
 }
@@ -183,30 +186,30 @@ thead th.th-nombre { min-width: 180px; padding-left: 14px; }
 thead th.th-proy { min-width: 100px; }
 thead th.th-saldo { min-width: 52px; }
 thead th.th-month { min-width: 68px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
-thead th.current-mo { background: #1565C0 !important; }
+thead th.current-mo { background: #1d4ed8 !important; }
 
 tbody td {
   padding: 5px 7px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid #2a2f50;
   vertical-align: middle;
 }
 tbody td.sticky-col {
   position: sticky;
   left: 0;
-  background: white;
+  background: #1c2038;
   z-index: 5;
   border-right: 2px solid var(--border);
 }
 tbody td.td-proyecto {
   position: sticky;
   left: 182px;
-  background: white;
+  background: #1c2038;
   z-index: 4;
 }
 tbody td.td-saldo {
   position: sticky;
   left: 284px;
-  background: white;
+  background: #1c2038;
   z-index: 3;
   border-right: 2px solid var(--border);
   text-align: center;
@@ -216,12 +219,12 @@ tbody td.td-saldo {
 }
 tr:nth-child(even) td.sticky-col,
 tr:nth-child(even) td.td-proyecto,
-tr:nth-child(even) td.td-saldo { background: #fafbfc; }
-tr:nth-child(even) td { background: #fafbfc; }
-tr:hover td { background: #EFF6FF !important; }
+tr:nth-child(even) td.td-saldo { background: #222540; }
+tr:nth-child(even) td { background: #222540; }
+tr:hover td { background: #1a2744 !important; }
 tr:hover td.sticky-col,
 tr:hover td.td-proyecto,
-tr:hover td.td-saldo { background: #EFF6FF !important; }
+tr:hover td.td-saldo { background: #1a2744 !important; }
 
 .td-nombre {
   font-size: 12px;
@@ -240,6 +243,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   display: inline-block;
 }
 .td-nombre:hover .name-text { text-decoration: underline; }
+.name-text { color: #e8edf8; font-weight:500; }
 
 .td-proyecto { text-align: center; }
 .badge {
@@ -254,10 +258,10 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   text-transform: uppercase;
 }
 
-.saldo-0 { color: #9e9e9e; }
-.saldo-low { color: #2E7D32; }
-.saldo-med { color: #E65100; }
-.saldo-high { color: #B71C1C; background: #fce4e4; padding: 1px 6px; border-radius: 4px; }
+.saldo-0 { color: #4b5563; }
+.saldo-low { color: #4ade80; }
+.saldo-med { color: #fb923c; }
+.saldo-high { color: #f87171; background: #1f0808; padding: 1px 6px; border-radius: 4px; }
 
 .month-cell {
   text-align: center;
@@ -267,9 +271,9 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   min-height: 28px;
   position: relative;
 }
-.month-cell:hover { background: #EFF6FF !important; }
-.month-cell.current-mo-cell { background: #fef9e7 !important; }
-.month-cell.current-mo-cell:hover { background: #EFF6FF !important; }
+.month-cell:hover { background: #1a2744 !important; }
+.month-cell.current-mo-cell { background: #1f1a08 !important; }
+.month-cell.current-mo-cell:hover { background: #1a2744 !important; }
 
 .vac-pill {
   display: inline-block;
@@ -289,14 +293,14 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 
 /* group row */
 .group-row td {
-  background: #f0f4f8 !important;
+  background: #0d0f1a !important;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.4px;
   text-transform: uppercase;
   padding: 5px 12px;
-  color: #374151;
-  border-bottom: 1px solid #dde3ec;
+  color: #a8b4d0;
+  border-bottom: 1px solid var(--border);
 }
 
 /* ── MODAL ── */
@@ -311,7 +315,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 }
 .overlay.open { display: flex; }
 .modal {
-  background: var(--surface);
+  background: #222540;
   border-radius: 10px;
   width: 480px;
   max-width: 95vw;
@@ -333,7 +337,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   justify-content: flex-end;
   gap: 8px;
   border-top: 1px solid var(--border);
-  background: #fafbfc;
+  background: #222540;
   border-radius: 0 0 10px 10px;
 }
 .form-group { margin-bottom: 13px; }
@@ -346,6 +350,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   font-family: inherit;
   font-size: 13px;
   color: var(--text);
+  background: #1e2235;
 }
 .form-group input:focus, .form-group select:focus { border-color: var(--header-accent); outline: none; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -354,17 +359,17 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 
 /* vac list inside modal */
 .vac-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
-.vac-list-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted); }
+.vac-list-empty { padding: 14px; text-align: center; font-size: 12px; color: #7a8aaa; }
 .vac-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid #2a2f50;
   font-size: 12px;
 }
 .vac-item:last-child { border-bottom: none; }
-.vac-item:nth-child(even) { background: #fafbfc; }
+.vac-item:nth-child(even) { background: #222540; }
 .vac-item .info { flex: 1; }
 .vac-item .dates { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 11px; }
 .vac-item .days { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
@@ -377,7 +382,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 
 /* ── TABS ── */
 .tabs {
-  background: var(--surface);
+  background: #0f1220;
   border-bottom: 1px solid var(--border);
   padding: 0 20px;
   display: flex;
@@ -405,7 +410,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 .tab-panel.active { display: block; }
 
 /* ── COVERAGE PANEL ── */
-.cov-wrapper { padding: 16px 20px 60px; }
+.cov-wrapper { padding: 16px 20px 60px; background: var(--bg); }
 .cov-controls {
   display: flex;
   gap: 12px;
@@ -444,7 +449,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 }
 .cov-card-head .person { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
 .cov-card-head .person .icon { font-size: 20px; }
-.cov-card-head .count { font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; }
+.cov-card-head .count { font-size: 11px; font-weight: 600; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 10px; }
 .cov-entry {
   padding: 10px 16px;
   border-top: 1px solid rgba(0,0,0,0.07);
@@ -492,7 +497,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   display: none;
   position: fixed;
   inset: 0;
-  background: white;
+  background: var(--surface);
   z-index: 9999;
   padding: 32px 40px;
   font-family: 'IBM Plex Sans', sans-serif;
@@ -521,10 +526,10 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 
 /* ── DOCUMENTOS / UNIFORMES ── */
 .status-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; white-space:nowrap; }
-.status-ok     { background:#e8f5e9; color:#1b5e20; }
-.status-warn   { background:#fff8e1; color:#e65100; }
-.status-danger { background:#ffebee; color:#b71c1c; }
-.status-muted  { background:#f1f3f5; color:#6b7280; }
+.status-ok     { background:#052e16; color:#4ade80; }
+.status-warn   { background:#1c0a00; color:#fb923c; }
+.status-danger { background:#1f0808; color:#f87171; }
+.status-muted  { background:#252a45; color:#9aa3c0; }
 .info-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px,1fr)); gap:14px; }
 .info-card { background:var(--surface); border-radius:8px; box-shadow:var(--shadow); border:1px solid var(--border); overflow:hidden; }
 .info-card-head { padding:12px 14px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; border-bottom:1px solid var(--border); }
@@ -557,7 +562,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   transition:transform 0.1s;
 }
 .cumple-card:hover { transform:translateY(-1px); }
-.cumple-card.today { background:#fdf6ff; border-left-color:#8e44ad; box-shadow:0 0 0 2px #ce93d8; }
+.cumple-card.today { background:#2e1065; border-left-color:#8e44ad; box-shadow:0 0 0 2px #ce93d8; }
 .cumple-card.this-week { border-left-color:#c0392b; }
 .cumple-day {
   font-size:28px; font-weight:800; font-family:'IBM Plex Mono',monospace;
@@ -576,24 +581,24 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 
 .emp-actions { display:flex; justify-content:center; gap:6px; min-width:100px; }
 .icon-btn {
-  border:1px solid var(--border); background:#fff; color:var(--header-bg);
+  border:1px solid var(--border); background:#1e2235; color:var(--text);
   border-radius:8px; padding:5px 7px; font-size:12px; cursor:pointer;
   box-shadow:0 1px 3px rgba(15,31,61,0.06);
 }
-.icon-btn:hover { background:#eef6ff; border-color:var(--header-accent); }
+.icon-btn:hover { background:#1a2744; border-color:var(--header-accent); }
 .icon-btn.danger { color:#B71C1C; }
-.icon-btn.danger:hover { background:#fff1f1; border-color:#f4b4b4; }
+.icon-btn.danger:hover { background:#1f0808; border-color:#7f1d1d; }
 .th-actions  { min-width:108px; }
 .th-ingreso  { min-width:100px; }
 .th-doc      { min-width:115px; }
 .th-uniform  { min-width:115px; }
-.td-ingreso, .td-doc, .td-uniform { text-align:center; font-size:11px; white-space:nowrap; }
-.td-ingreso  { font-family:'IBM Plex Mono',monospace; color:#374151; }
-.ingreso-empty { color:#9ca3af; font-family:'IBM Plex Sans',sans-serif; }
-.anniv-badge { display:inline-block; margin-top:3px; padding:1px 6px; border-radius:999px; background:#eef6ff; color:#1565C0; font-size:9px; font-weight:700; }
-.anniv-due   { background:#fff4e6; color:#B45309; }
-.anniv-today { background:#f3e8ff; color:#6a0dad; }
-.saldo-mode  { display:block; margin-top:2px; font-size:9px; color:#6b7280; font-weight:600; }
+.td-ingreso, .td-doc, .td-uniform { text-align:center; font-size:11px; white-space:nowrap; color:#dde6f5; }
+.td-ingreso  { font-family:'IBM Plex Mono',monospace; color:#dde6f5; }
+.ingreso-empty { color:#5a6a8a; font-family:'IBM Plex Sans',sans-serif; }
+.anniv-badge { display:inline-block; margin-top:3px; padding:1px 6px; border-radius:999px; background:#1e3a8a; color:#bfdbfe; font-size:9px; font-weight:700; }
+.anniv-due   { background:#1c0a00; color:#fb923c; }
+.anniv-today { background:#2e1065; color:#c084fc; }
+.saldo-mode  { display:block; margin-top:2px; font-size:9px; color:#8899c0; font-weight:600; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 700px) {
@@ -604,7 +609,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 /* Context menu */
 .ctx-menu {
   position: fixed;
-  background: white;
+  background: #222540;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
@@ -621,7 +626,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
   align-items: center;
   gap: 8px;
 }
-.ctx-item:hover { background: var(--bg); }
+.ctx-item:hover { background: #222640; }
 .ctx-item.danger { color: #B71C1C; }
 </style>
 </head>
@@ -843,7 +848,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
           </div>
         </div>
         <!-- Employee info strip -->
-        <div id="vEmpInfo" style="display:none;margin-top:10px;padding:8px 10px;background:white;border-radius:6px;border:1px solid var(--border);display:flex;gap:16px;align-items:center;font-size:12px">
+        <div id="vEmpInfo" style="display:none;margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);display:flex;gap:16px;align-items:center;font-size:12px">
           <div><span style="color:var(--text-muted);font-size:10px;font-weight:600;text-transform:uppercase">Código</span><br><strong id="vInfoCodigo" style="font-family:'IBM Plex Mono',monospace">—</strong></div>
           <div><span style="color:var(--text-muted);font-size:10px;font-weight:600;text-transform:uppercase">Cédula</span><br><strong id="vInfoCedula" style="font-family:'IBM Plex Mono',monospace">—</strong></div>
           <div><span style="color:var(--text-muted);font-size:10px;font-weight:600;text-transform:uppercase">Días disponibles</span><br><strong id="vInfoSaldo" style="font-size:16px">—</strong></div>
@@ -982,7 +987,7 @@ tr:hover td.td-saldo { background: #EFF6FF !important; }
 </div>
 
 <!-- PRINT SHEET -->
-<div id="printSheet">
+<div id="printSheet" style="background:white;color:#1a1d23">
   <div class="ps-header">
     <div style="display:flex; justify-content:space-between; align-items:flex-start">
       <div>
@@ -2149,6 +2154,7 @@ async function init() {
   refreshCoberturaList();
   renderTable();
   updateStats();
+  renderConflictBar();
 }
 
 async function persist() {
@@ -2556,6 +2562,70 @@ function autoCalc() {
   }
 }
 
+// ═══════════════════════════════════════════
+// DETECTOR DE CHOQUES DE COBERTURA
+// ═══════════════════════════════════════════
+function datesOverlap(s1, e1, s2, e2) {
+  return new Date(s1+'T12:00:00') <= new Date(e2+'T12:00:00') &&
+         new Date(e1+'T12:00:00') >= new Date(s2+'T12:00:00');
+}
+
+function detectConflicts(cobertura, inicio, fin, excludeEmpId) {
+  if (!cobertura || !cobertura.trim()) return [];
+  const cob = cobertura.trim();
+  const conflicts = [];
+  emps.forEach(emp => {
+    if (emp.id === excludeEmpId) return;
+    (emp.vacaciones||[]).forEach(v => {
+      if (!v.cobertura || v.cobertura.trim() !== cob) return;
+      if (datesOverlap(inicio, fin, v.inicio, v.fin)) {
+        conflicts.push({ emp, v });
+      }
+    });
+  });
+  return conflicts;
+}
+
+function scanAllConflicts() {
+  // Devuelve todos los choques existentes en el sistema
+  const all = [];
+  emps.forEach(emp => {
+    (emp.vacaciones||[]).forEach(v => {
+      if (!v.cobertura) return;
+      const conflicts = detectConflicts(v.cobertura, v.inicio, v.fin, emp.id);
+      conflicts.forEach(c => {
+        // Evitar duplicados (A vs B y B vs A)
+        const key = [emp.id+':'+v.inicio, c.emp.id+':'+c.v.inicio].sort().join('|');
+        if (!all.find(x=>x.key===key)) {
+          all.push({ key, emp1:emp, v1:v, emp2:c.emp, v2:c.v, cobertura:v.cobertura });
+        }
+      });
+    });
+  });
+  return all;
+}
+
+function renderConflictBar() {
+  const conflicts = scanAllConflicts();
+  let bar = document.getElementById('conflictBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'conflictBar';
+    bar.style.cssText = 'background:#fff3cd;border-bottom:2px solid #ffc107;padding:8px 20px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;';
+    document.querySelector('.tabs').before(bar);
+  }
+  if (!conflicts.length) { bar.style.display='none'; return; }
+  bar.style.display = 'flex';
+  const details = conflicts.map(c =>
+    `<strong>${c.cobertura}</strong> cubre a <em>${c.emp1.nombre.split(' ')[0]} ${c.emp1.nombre.split(' ')[1]||''}</em> (${fmtDate(c.v1.inicio)}–${fmtDate(c.v1.fin)}) y a <em>${c.emp2.nombre.split(' ')[0]} ${c.emp2.nombre.split(' ')[1]||''}</em> (${fmtDate(c.v2.inicio)}–${fmtDate(c.v2.fin)}) al mismo tiempo`
+  ).join(' &nbsp;·&nbsp; ');
+  bar.innerHTML = `<span style="font-size:16px">⚠️</span>
+    <strong>${conflicts.length} choque${conflicts.length>1?'s':''} de cobertura detectado${conflicts.length>1?'s':''}:</strong>
+    <span style="color:#856404">${details}</span>
+    <button onclick="document.getElementById('conflictBar').style.display='none'"
+      style="margin-left:auto;background:none;border:1px solid #ffc107;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕ Cerrar</button>`;
+}
+
 function saveVac() {
   if (!curEmpId) { alert('Seleccione un empleado primero.'); return; }
   const emp = emps.find(e=>e.id===curEmpId);
@@ -2568,6 +2638,19 @@ function saveVac() {
   if (!inicio||!fin) { alert('Ingrese las fechas.'); return; }
   if (fin<inicio)    { alert('La fecha fin debe ser mayor o igual a la fecha inicio.'); return; }
   if (!dias||isNaN(dias)) dias = calendarDays(inicio, fin);
+
+  // ── Detector de choques ──
+  if (cob) {
+    const conflicts = detectConflicts(cob, inicio, fin, emp.id);
+    if (conflicts.length > 0) {
+      const lines = conflicts.map(c =>
+        `  • ${c.emp.nombre} (${c.emp.proyecto})\n    ${fmtDate(c.v.inicio)} al ${fmtDate(c.v.fin)}`
+      ).join('\n');
+      const msg = `⚠️ CHOQUE DE COBERTURA\n\n${cob} ya tiene asignada cobertura para:\n\n${lines}\n\n¿Desea guardar de todas formas?`;
+      if (!confirm(msg)) return;
+    }
+  }
+
   if (!emp.vacaciones) emp.vacaciones=[];
   emp.vacaciones.push({inicio, fin, dias, cobertura:cob, notas:nota});
   emp.saldo = (emp.saldo||0) - dias;   // Allow negative — shows as warning
@@ -2580,6 +2663,7 @@ function saveVac() {
   document.getElementById('vCobertura').value='';
   document.getElementById('vNotas').value='';
   renderTable();
+  renderConflictBar();
 }
 
 function delVac(empId, idx) {
@@ -2592,6 +2676,7 @@ function delVac(empId, idx) {
   renderVacList(emp);
   showVacEmpInfo(emp);
   renderTable();
+  renderConflictBar();
 }
 
 function closeVac() {
@@ -2839,14 +2924,14 @@ function docStatus(emp) {
 function docStatusHtml(emp) {
   const st = docStatus(emp);
   const fecha = emp.venceIdentificacion ? fmtFullDate(emp.venceIdentificacion) : 'Sin vencimiento';
-  return `<span class="status-pill ${st.cls}">${st.label}</span><br><span class="saldo-mode">${fecha}</span>`;
+  return `<span class="status-pill ${st.cls}">${st.label}</span><br><span style="color:#9ab0d0" class="saldo-mode">${fecha}</span>`;
 }
 
 function lastUniformHtml(emp) {
   const list = [...(emp.uniformes||[])].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
   const u = list[0];
   if (!u) return '<span class="status-pill status-muted">Sin registro</span>';
-  return `<strong>${fmtFullDate(u.fecha)}</strong><br><span class="saldo-mode">${u.tipo||'Entrega'} x${u.cantidad||1}</span>`;
+  return `<strong>${fmtFullDate(u.fecha)}</strong><br><span style="color:#9ab0d0" class="saldo-mode">${u.tipo||'Entrega'} x${u.cantidad||1}</span>`;
 }
 
 function renderCumpleanos() {
