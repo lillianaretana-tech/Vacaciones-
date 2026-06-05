@@ -879,7 +879,10 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
       <div class="vac-list" id="vacListBox"></div>
 
       <hr class="divider">
-      <div class="section-title">Agregar período</div>
+      <div class="section-title" id="vacFormTitle">Agregar período</div>
+      <div id="vacEditNotice" style="display:none;margin:-4px 0 12px;padding:8px 10px;background:#fff8e1;border:1px solid #f6c453;border-radius:6px;color:#7a4d00;font-size:12px">
+        Editando período existente. Guarde para aplicar el ajuste o cancele la edición.
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label>Fecha inicio</label>
@@ -911,8 +914,9 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
       </div>
     </div>
     <div class="modal-foot">
+      <button class="btn btn-secondary" id="cancelVacEditBtn" style="display:none" onclick="cancelVacEdit()">Cancelar edición</button>
       <button class="btn btn-secondary" onclick="closeVac()">Cancelar</button>
-      <button class="btn btn-success" onclick="saveVac()">✔ Guardar vacaciones</button>
+      <button class="btn btn-success" id="saveVacBtn" onclick="saveVac()">✔ Guardar vacaciones</button>
     </div>
   </div>
 </div>
@@ -2123,6 +2127,7 @@ async function testConnection() {
 let emps = [];
 let curEmpId = null;
 let editEmpId = null;
+let editVacIndex = null;
 let ctxId = null;
 
 const STORAGE_KEY = 'sbm_vac_v3';
@@ -2507,6 +2512,7 @@ function buildLegend() {
 // ═══════════════════════════════════════════
 function openVacModal(empId, ym) {
   curEmpId = empId;
+  setVacEditMode(null);
 
   // Populate project dropdown
   const proyList = [...new Set(emps.map(e=>e.proyecto))].sort();
@@ -2572,13 +2578,15 @@ function onVacProyChange() {
   populateVacEmpList(p);
   hideVacEmpInfo();
   curEmpId = null;
+  setVacEditMode(null);
   document.getElementById('vacListBox').innerHTML='<div class="vac-list-empty">Seleccione un empleado</div>';
 }
 
 function onVacEmpChange() {
   const id = +document.getElementById('vEmp').value;
-  if (!id) { hideVacEmpInfo(); curEmpId=null; return; }
+  if (!id) { hideVacEmpInfo(); curEmpId=null; setVacEditMode(null); return; }
   curEmpId = id;
+  setVacEditMode(null);
   const emp = emps.find(e=>e.id===id);
   if (emp) { showVacEmpInfo(emp); renderVacList(emp); }
 }
@@ -2614,9 +2622,56 @@ function renderVacList(emp) {
         <div class="dates">📅 ${fmtDate(v.inicio)} al ${fmtDate(v.fin)}</div>
         <div class="days">${v.dias} día(s)${v.cobertura ? ' · Cubre: '+v.cobertura : ''}${v.notas ? ' · '+v.notas : ''}</div>
       </div>
+      <button class="btn btn-secondary" style="padding:3px 8px;font-size:11px" onclick="editVac(${emp.id},${v._i})" title="Editar">Editar</button>
       <button class="del-btn" onclick="delVac(${emp.id},${v._i})" title="Eliminar">×</button>
     </div>`
   ).join('');
+}
+
+function setVacEditMode(idx) {
+  editVacIndex = idx;
+  const editing = idx !== null && idx !== undefined;
+  document.getElementById('vacFormTitle').textContent = editing ? 'Editar período' : 'Agregar período';
+  document.getElementById('vacEditNotice').style.display = editing ? 'block' : 'none';
+  document.getElementById('cancelVacEditBtn').style.display = editing ? 'inline-flex' : 'none';
+  document.getElementById('saveVacBtn').textContent = editing ? '✔ Guardar ajuste' : '✔ Guardar vacaciones';
+}
+
+function editVac(empId, idx) {
+  const emp = emps.find(e=>e.id===empId);
+  if (!emp || !emp.vacaciones || !emp.vacaciones[idx]) return;
+  curEmpId = empId;
+  document.getElementById('vProy').value = emp.proyecto;
+  populateVacEmpList(emp.proyecto);
+  document.getElementById('vEmp').value = empId;
+  showVacEmpInfo(emp);
+  const v = emp.vacaciones[idx];
+  document.getElementById('vStart').value = v.inicio || '';
+  document.getElementById('vEnd').value = v.fin || '';
+  document.getElementById('vDias').value = v.dias || '';
+  document.getElementById('vCobertura').value = v.cobertura || '';
+  document.getElementById('vNotas').value = v.notas || '';
+  setVacEditMode(idx);
+  autoCalc();
+}
+
+function clearVacForm() {
+  document.getElementById('vDias').value='';
+  document.getElementById('vCobertura').value='Juana DÃ­az';
+  document.getElementById('vNotas').value='';
+  document.getElementById('autoDaysHint').style.display='none';
+  setVacEditMode(null);
+  autoCalc();
+}
+
+function cancelVacEdit() {
+  const start = document.getElementById('vStart').value;
+  if (start) {
+    const [y,m] = start.split('-');
+    document.getElementById('vStart').value = `${y}-${m}-01`;
+    document.getElementById('vEnd').value   = `${y}-${m}-05`;
+  }
+  clearVacForm();
 }
 
 function autoCalc() {
@@ -2642,13 +2697,13 @@ function datesOverlap(s1, e1, s2, e2) {
          new Date(e1+'T12:00:00') >= new Date(s2+'T12:00:00');
 }
 
-function detectConflicts(cobertura, inicio, fin, excludeEmpId) {
+function detectConflicts(cobertura, inicio, fin, excludeEmpId, excludeVacIndex = null) {
   if (!cobertura || !cobertura.trim()) return [];
   const cob = cobertura.trim();
   const conflicts = [];
   emps.forEach(emp => {
-    if (emp.id === excludeEmpId) return;
-    (emp.vacaciones||[]).forEach(v => {
+    (emp.vacaciones||[]).forEach((v, idx) => {
+      if (emp.id === excludeEmpId && (excludeVacIndex === null || idx === excludeVacIndex)) return;
       if (!v.cobertura || v.cobertura.trim() !== cob) return;
       if (datesOverlap(inicio, fin, v.inicio, v.fin)) {
         conflicts.push({ emp, v });
@@ -2719,7 +2774,7 @@ function saveVac() {
 
   // ── Detector de choques ──
   if (cob) {
-    const conflicts = detectConflicts(cob, inicio, fin, emp.id);
+    const conflicts = detectConflicts(cob, inicio, fin, emp.id, editVacIndex);
     if (conflicts.length > 0) {
       const lines = conflicts.map(c =>
         `  • ${c.emp.nombre} (${c.emp.proyecto})\n    ${fmtDate(c.v.inicio)} al ${fmtDate(c.v.fin)}`
@@ -2730,16 +2785,20 @@ function saveVac() {
   }
 
   if (!emp.vacaciones) emp.vacaciones=[];
-  emp.vacaciones.push({inicio, fin, dias, cobertura:cob, notas:nota});
-  emp.saldo = (emp.saldo||0) - dias;   // Allow negative — shows as warning
+  if (editVacIndex !== null && editVacIndex !== undefined && emp.vacaciones[editVacIndex]) {
+    const prev = emp.vacaciones[editVacIndex];
+    emp.vacaciones[editVacIndex] = {inicio, fin, dias, cobertura:cob, notas:nota};
+    emp.saldo = (emp.saldo||0) + (prev.dias||0) - dias;
+  } else {
+    emp.vacaciones.push({inicio, fin, dias, cobertura:cob, notas:nota});
+    emp.saldo = (emp.saldo||0) - dias;   // Allow negative — shows as warning
+  }
   persist();
   populateCovFilter();
   refreshCoberturaList();
   showVacEmpInfo(emp);
   renderVacList(emp);
-  document.getElementById('vDias').value='';
-  document.getElementById('vCobertura').value='';
-  document.getElementById('vNotas').value='';
+  clearVacForm();
   renderTable();
   renderConflictBar();
 }
@@ -2750,6 +2809,7 @@ function delVac(empId, idx) {
   if (!confirm(`¿Eliminar vacaciones del ${fmtDate(v.inicio)} al ${fmtDate(v.fin)}?`)) return;
   emp.saldo = (emp.saldo||0) + v.dias;
   emp.vacaciones.splice(idx, 1);
+  if (curEmpId === empId && editVacIndex === idx) setVacEditMode(null);
   persist();
   renderVacList(emp);
   showVacEmpInfo(emp);
@@ -2760,6 +2820,7 @@ function delVac(empId, idx) {
 function closeVac() {
   document.getElementById('vacOverlay').classList.remove('open');
   curEmpId = null;
+  setVacEditMode(null);
 }
 
 // ═══════════════════════════════════════════
