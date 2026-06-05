@@ -895,7 +895,7 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Días calendario <span style="font-size:10px;color:var(--text-muted);font-weight:400">(sáb, dom incluidos)</span></label>
+          <label>Días de vacaciones <span style="font-size:10px;color:var(--text-muted);font-weight:400">(feriados no cuentan)</span></label>
           <input type="number" id="vDias" min="1" max="90" placeholder="Auto">
           <div class="auto-days" id="autoDaysHint"></div>
         </div>
@@ -2260,10 +2260,14 @@ function calendarDays(s, e) {
   let cur = new Date(s + 'T12:00:00');
   const end = new Date(e + 'T12:00:00');
   while (cur <= end) {
-    n++;
+    if (!isHoliday(localISODate(cur))) n++;
     cur.setDate(cur.getDate() + 1);
   }
   return n;
+}
+
+function vacationDays(v) {
+  return (v && v.inicio && v.fin) ? calendarDays(v.inicio, v.fin) : (v?.dias || 0);
 }
 
 function vacsInMonth(emp, y, m) {
@@ -2419,7 +2423,7 @@ function renderTable() {
         const continuesNext = vE > mEnd;
         const prefix = continuesPrev ? '◀' : '';
         const suffix = continuesNext ? '▶' : '';
-        const tip = `${fmtDate(v.inicio)} al ${fmtDate(v.fin)} · ${v.dias}d${v.cobertura?' · '+v.cobertura:''}${v.notas?' · '+v.notas:''}`;
+        const tip = `${fmtDate(v.inicio)} al ${fmtDate(v.fin)} · ${vacationDays(v)}d${v.cobertura?' · '+v.cobertura:''}${v.notas?' · '+v.notas:''}`;
         inner += `<span class="vac-pill" style="background:${c};opacity:${continuesPrev||continuesNext?0.85:1}" onclick="openVacModal(${emp.id},'${y}-${String(mo).padStart(2,'0')}')" title="${tip}">${prefix}${lbl}${suffix}</span>`;
       });
       // Birthday cake 🎂 in the employee's birthday month
@@ -2620,7 +2624,7 @@ function renderVacList(emp) {
     `<div class="vac-item">
       <div class="info">
         <div class="dates">📅 ${fmtDate(v.inicio)} al ${fmtDate(v.fin)}</div>
-        <div class="days">${v.dias} día(s)${v.cobertura ? ' · Cubre: '+v.cobertura : ''}${v.notas ? ' · '+v.notas : ''}</div>
+        <div class="days">${vacationDays(v)} día(s)${v.cobertura ? ' · Cubre: '+v.cobertura : ''}${v.notas ? ' · '+v.notas : ''}</div>
       </div>
       <button class="btn btn-secondary" style="padding:3px 8px;font-size:11px" onclick="editVac(${emp.id},${v._i})" title="Editar">Editar</button>
       <button class="del-btn" onclick="delVac(${emp.id},${v._i})" title="Eliminar">×</button>
@@ -2648,7 +2652,7 @@ function editVac(empId, idx) {
   const v = emp.vacaciones[idx];
   document.getElementById('vStart').value = v.inicio || '';
   document.getElementById('vEnd').value = v.fin || '';
-  document.getElementById('vDias').value = v.dias || '';
+  document.getElementById('vDias').value = vacationDays(v) || '';
   document.getElementById('vCobertura').value = v.cobertura || '';
   document.getElementById('vNotas').value = v.notas || '';
   setVacEditMode(idx);
@@ -2681,7 +2685,7 @@ function autoCalc() {
   if (s && e && e >= s) {
     const cd = calendarDays(s, e);
     document.getElementById('vDias').value = cd;
-    hint.textContent = `= ${cd} días calendario (sáb y dom incluidos)`;
+    hint.textContent = `= ${cd} días de vacaciones (feriados no cuentan)`;
     hint.style.display = 'block';
     hint.style.color = '#2E7D32';
   } else {
@@ -2788,7 +2792,7 @@ function saveVac() {
   if (editVacIndex !== null && editVacIndex !== undefined && emp.vacaciones[editVacIndex]) {
     const prev = emp.vacaciones[editVacIndex];
     emp.vacaciones[editVacIndex] = {inicio, fin, dias, cobertura:cob, notas:nota};
-    emp.saldo = (emp.saldo||0) + (prev.dias||0) - dias;
+    emp.saldo = (emp.saldo||0) + vacationDays(prev) - dias;
   } else {
     emp.vacaciones.push({inicio, fin, dias, cobertura:cob, notas:nota});
     emp.saldo = (emp.saldo||0) - dias;   // Allow negative — shows as warning
@@ -2807,7 +2811,7 @@ function delVac(empId, idx) {
   const emp = emps.find(e=>e.id===empId);
   const v = emp.vacaciones[idx];
   if (!confirm(`¿Eliminar vacaciones del ${fmtDate(v.inicio)} al ${fmtDate(v.fin)}?`)) return;
-  emp.saldo = (emp.saldo||0) + v.dias;
+  emp.saldo = (emp.saldo||0) + vacationDays(v);
   emp.vacaciones.splice(idx, 1);
   if (curEmpId === empId && editVacIndex === idx) setVacEditMode(null);
   persist();
@@ -3001,12 +3005,12 @@ function conflictReportRows() {
         c.emp1.proyecto,
         c.v1.inicio,
         c.v1.fin,
-        c.v1.dias || calendarDays(c.v1.inicio, c.v1.fin),
+        vacationDays(c.v1),
         c.emp2.nombre,
         c.emp2.proyecto,
         c.v2.inicio,
         c.v2.fin,
-        c.v2.dias || calendarDays(c.v2.inicio, c.v2.fin),
+        vacationDays(c.v2),
         overlapStart,
         overlapEnd,
         calendarDays(overlapStart, overlapEnd)
@@ -3043,7 +3047,7 @@ function projectVacationRows(projectFilter) {
           cedula: emp.cedula || '',
           inicio: v.inicio,
           fin: v.fin,
-          dias: v.dias || calendarDays(v.inicio, v.fin),
+          dias: vacationDays(v),
           cobertura: v.cobertura || '',
           notas: v.notas || '',
           estado: status
@@ -3171,7 +3175,7 @@ function calcSaldo(emp) {
   const fromThisYear  = Math.max(0, totalEarned - fromPastYears); // año en curso
 
   // Días consumidos: registrados en el sistema + ajuste manual (vacaciones antes del sistema)
-  const systemUsed  = (emp.vacaciones||[]).reduce((s,v)=>s+(v.dias||0), 0);
+  const systemUsed  = (emp.vacaciones||[]).reduce((s,v)=>s+vacationDays(v), 0);
   const manualUsed  = emp.diasAjuste||0;
   const totalUsed   = systemUsed + manualUsed;
 
@@ -3577,7 +3581,7 @@ function renderCoverage() {
             ${v.notas ? '· '+v.notas : ''}
           </div>
         </div>
-        <span class="days-badge" style="background:${projColor}">${v.dias}d</span>
+        <span class="days-badge" style="background:${projColor}">${vacationDays(v)}d</span>
       </div>`;
     }).join('');
 
@@ -3644,7 +3648,7 @@ function printCoverage(backup) {
       <td style="font-weight:600">${emp.nombre}</td>
       <td><span class="ps-badge" style="background:${projColor}">${emp.proyecto}</span></td>
       <td>${dateRange}</td>
-      <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace">${v.dias}d</td>
+      <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace">${vacationDays(v)}d</td>
       <td style="color:#6b7280;font-size:12px">${v.notas||'—'}</td>
     </tr>`;
   }).join('');
