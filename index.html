@@ -713,6 +713,8 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
 <div class="tabs">
   <button class="tab-btn active" id="tab-gantt" onclick="switchTab('gantt')">📅 Programación General</button>
   <button class="tab-btn" id="tab-cov" onclick="switchTab('cov')">👥 Próximas Coberturas</button>
+  <button class="tab-btn" id="tab-docs" onclick="switchTab('docs')">🪪 Documentos</button>
+  <button class="tab-btn" id="tab-uniforms" onclick="switchTab('uniforms')">👕 Uniformes</button>
   <button class="tab-btn" id="tab-cumple" onclick="switchTab('cumple')">🎂 Cumpleaños</button>
 </div>
 
@@ -836,7 +838,7 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
     </div>
     <div class="modal-foot">
       <button class="btn btn-secondary" onclick="closeUniform()">Cancelar</button>
-      <button class="btn btn-success" onclick="saveUniform()">✔ Guardar entrega</button>
+      <button class="btn btn-success" id="saveUniformBtn" onclick="saveUniform()">✔ Guardar entrega</button>
     </div>
   </div>
 </div>
@@ -3421,7 +3423,8 @@ function populateUniformEmpList() {
   });
 }
 
-function saveUniform() {
+async function saveUniform() {
+  const btn = document.getElementById('saveUniformBtn');
   const empId = +document.getElementById('uEmp').value;
   const emp = emps.find(e=>e.id===empId);
   if (!emp) { alert('Seleccione un funcionario.'); return; }
@@ -3431,14 +3434,18 @@ function saveUniform() {
   const observacion = document.getElementById('uObs').value.trim();
   if (!fecha) { alert('Ingrese la fecha de entrega.'); return; }
   if (!tipo)  { alert('Ingrese el tipo de artículo entregado.'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
   if (!emp.uniformes) emp.uniformes=[];
   emp.uniformes.push({fecha, tipo, cantidad, observacion});
-  persist();
+  await persist();
   closeUniform();
   renderUniforms();
+  renderTable();
+  showSyncStatus(`👕 Entrega registrada: ${tipo} x${cantidad} · ${emp.nombre}`, '#2E7D32');
+  if (btn) { btn.disabled = false; btn.textContent = '✔ Guardar entrega'; }
 }
 
-function deleteUniform(empId, sortedIdx) {
+async function deleteUniform(empId, sortedIdx) {
   const emp = emps.find(e=>e.id===empId);
   if (!emp||!emp.uniformes) return;
   const sorted = [...emp.uniformes].map((u,i)=>({...u,_i:i})).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
@@ -3446,8 +3453,9 @@ function deleteUniform(empId, sortedIdx) {
   if (!u) return;
   if (!confirm(`¿Eliminar entrega de ${u.tipo||'uniforme'} del ${fmtFullDate(u.fecha)}?`)) return;
   emp.uniformes.splice(u._i,1);
-  persist();
+  await persist();
   renderUniforms();
+  renderTable();
 }
 
 function closeUniform() {
