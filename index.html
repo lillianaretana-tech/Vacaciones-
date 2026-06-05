@@ -510,17 +510,24 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
 #printSheet .ps-header .ps-person { font-size: 15px; font-weight: 700; margin-top: 8px; color: #1e88e5; display:flex; align-items:center; gap:6px; }
 #printSheet table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 #printSheet thead th { background: #0f1f3d; color: white; padding: 9px 12px; text-align: left; font-size: 12px; }
-#printSheet tbody td { padding: 9px 12px; border-bottom: 1px solid #e2e5ea; font-size: 13px; vertical-align: middle; }
-#printSheet tbody tr:nth-child(even) td { background: #f8f9fa; }
-#printSheet .ps-badge { display:inline-block; padding:2px 8px; border-radius:8px; font-size:10px; font-weight:700; color:white; }
+#printSheet tbody td { padding: 9px 12px; border: 1px solid #d8dee8; font-size: 13px; vertical-align: middle; color:#111827; background:#fff; }
+#printSheet tbody tr:nth-child(even) td { background: #eef3f8; color:#111827; }
+#printSheet .ps-badge { display:inline-block; padding:2px 8px; border-radius:8px; font-size:10px; font-weight:700; color:#111827 !important; background:#fff !important; border:1px solid #9ca3af; }
+#printSheet .ps-status { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:700; color:#111827 !important; background:#fff !important; border:1px solid #9ca3af; white-space:nowrap; }
+#printSheet .ps-section { margin: 18px 0 8px; padding: 8px 10px; background:#e8eef7; border-left:4px solid #0f1f3d; color:#0f1f3d; font-weight:700; }
 #printSheet .ps-footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e2e5ea; font-size: 11px; color: #9ca3af; display:flex; justify-content:space-between; }
 #printSheet .no-print-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0f1f3d; padding: 10px 20px; display: flex; gap: 10px; align-items: center; }
 #printSheet .no-print-bar span { color: rgba(255,255,255,0.7); font-size: 12px; flex:1; }
 
 @media print {
   body > *:not(#printSheet) { display: none !important; }
-  #printSheet { display: block !important; position: static !important; padding: 0 !important; }
+  #printSheet { display: block !important; position: static !important; padding: 0 !important; background:#fff !important; color:#111827 !important; }
   #printSheet .no-print-bar { display: none !important; }
+  #printSheet tbody td,
+  #printSheet tbody tr:nth-child(even) td { background:#fff !important; color:#111827 !important; border:1px solid #9ca3af !important; }
+  #printSheet thead th { background:#0f1f3d !important; color:#fff !important; }
+  #printSheet .ps-badge,
+  #printSheet .ps-status { background:#fff !important; color:#111827 !important; border:1px solid #6b7280 !important; }
   * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 
@@ -660,17 +667,26 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
     style="min-width:200px" oninput="renderTable()">
 
   <div class="sep"></div>
+  <label>Período</label>
+  <select id="periodMode" onchange="renderTable()">
+    <option value="next12" selected>Próximo año</option>
+    <option value="history2024">Histórico 2024-hoy</option>
+    <option value="custom">Personalizado</option>
+  </select>
   <label>Desde</label>
-  <select id="yearFrom" onchange="renderTable()">
+  <select id="yearFrom" onchange="setCustomPeriod(); renderTable()">
     <option value="2024">2024</option>
     <option value="2025" selected>2025</option>
     <option value="2026">2026</option>
+    <option value="2027">2027</option>
   </select>
   <label>Hasta</label>
-  <select id="yearTo" onchange="renderTable()">
+  <select id="yearTo" onchange="setCustomPeriod(); renderTable()">
+    <option value="2024">2024</option>
     <option value="2025">2025</option>
     <option value="2026" selected>2026</option>
     <option value="2027">2027</option>
+    <option value="2028">2028</option>
   </select>
 
   <div class="sep"></div>
@@ -679,6 +695,9 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
   <button class="btn btn-info" onclick="syncFromCloud()">☁ Actualizar</button>
   <button class="btn btn-secondary" onclick="testConnection()" title="Probar y forzar conexión a Supabase">🔌 Reconectar</button>
   <button class="btn btn-secondary" onclick="exportJSON()">💾 Exportar</button>
+  <button class="btn btn-secondary" onclick="exportConflictExcel()" title="Exportar choques de cobertura a Excel">⚠ Choques Excel</button>
+  <button class="btn btn-secondary" onclick="exportProjectVacationsExcel()" title="Exportar vacaciones del proyecto filtrado a Excel">📊 Excel Proyecto</button>
+  <button class="btn btn-secondary" onclick="printProjectVacations()" title="Imprimir o guardar PDF del proyecto filtrado">🧾 PDF Proyecto</button>
   <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Importar</button>
   <button class="btn btn-secondary" onclick="window.print()">🖨 Imprimir</button>
   <button class="btn btn-danger" onclick="resetData()" title="Volver a datos originales">↺ Reset</button>
@@ -2251,12 +2270,65 @@ function vacsInMonth(emp, y, m) {
 }
 
 function getMonths() {
+  const mode = document.getElementById('periodMode')?.value || 'next12';
+  if (mode === 'next12') {
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0,0,0,0);
+    const out = [];
+    for (let i = 0; i <= 12; i++) {
+      const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+      out.push({y: d.getFullYear(), mo: d.getMonth() + 1});
+    }
+    return out;
+  }
+  if (mode === 'history2024') {
+    const now = new Date();
+    const out = [];
+    for (let y = 2024; y <= now.getFullYear(); y++) {
+      const lastMo = y === now.getFullYear() ? now.getMonth() + 1 : 12;
+      for (let mo = 1; mo <= lastMo; mo++) out.push({y, mo});
+    }
+    return out;
+  }
   const ys = +document.getElementById('yearFrom').value;
   const ye = +document.getElementById('yearTo').value;
   const out = [];
   for (let y = ys; y <= ye; y++)
     for (let mo = 1; mo <= 12; mo++) out.push({y, mo});
   return out;
+}
+
+function setCustomPeriod() {
+  const mode = document.getElementById('periodMode');
+  if (mode) mode.value = 'custom';
+}
+
+function localISODate(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function selectedPeriodRange() {
+  const months = getMonths();
+  const first = months[0];
+  const last = months[months.length - 1];
+  const mode = document.getElementById('periodMode')?.value || 'next12';
+  const end = mode === 'history2024'
+    ? localISODate()
+    : localISODate(new Date(last.y, last.mo, 0));
+  return {
+    start: `${first.y}-${String(first.mo).padStart(2,'0')}-01`,
+    end,
+    label: mode === 'next12' ? 'Próximo año' : (mode === 'history2024' ? 'Histórico 2024-hoy' : `${first.y} a ${last.y}`)
+  };
+}
+
+function vacInSelectedPeriod(v) {
+  const range = selectedPeriodRange();
+  return v.inicio <= range.end && v.fin >= range.start;
 }
 
 // ═══════════════════════════════════════════
@@ -2587,13 +2659,17 @@ function detectConflicts(cobertura, inicio, fin, excludeEmpId) {
 }
 
 function scanAllConflicts() {
-  // Devuelve todos los choques existentes en el sistema
+  // Devuelve choques activos o futuros; omite choques completamente pasados.
   const all = [];
+  const today = new Date(); today.setHours(0,0,0,0);
   emps.forEach(emp => {
     (emp.vacaciones||[]).forEach(v => {
       if (!v.cobertura) return;
       const conflicts = detectConflicts(v.cobertura, v.inicio, v.fin, emp.id);
       conflicts.forEach(c => {
+        const overlapEnd = new Date((v.fin < c.v.fin ? v.fin : c.v.fin) + 'T12:00:00');
+        overlapEnd.setHours(0,0,0,0);
+        if (overlapEnd < today) return;
         // Evitar duplicados (A vs B y B vs A)
         const key = [emp.id+':'+v.inicio, c.emp.id+':'+c.v.inicio].sort().join('|');
         if (!all.find(x=>x.key===key)) {
@@ -2622,6 +2698,8 @@ function renderConflictBar() {
   bar.innerHTML = `<span style="font-size:16px">⚠️</span>
     <strong>${conflicts.length} choque${conflicts.length>1?'s':''} de cobertura detectado${conflicts.length>1?'s':''}:</strong>
     <span style="color:#856404">${details}</span>
+    <button onclick="exportConflictExcel()"
+      style="margin-left:auto;background:#0f1f3d;color:white;border:1px solid #0f1f3d;border-radius:4px;padding:3px 9px;cursor:pointer;font-size:11px">Excel</button>
     <button onclick="document.getElementById('conflictBar').style.display='none'"
       style="margin-left:auto;background:none;border:1px solid #ffc107;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕ Cerrar</button>`;
 }
@@ -2789,6 +2867,190 @@ function exportJSON() {
   a.href = URL.createObjectURL(new Blob([data],{type:'application/json'}));
   a.download = `vacaciones_sbm_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
+}
+
+function escHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[ch]));
+}
+
+function cleanFileName(value) {
+  return String(value || 'todos')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/gi, '_')
+    .replace(/^_+|_+$/g, '')
+    .toLowerCase();
+}
+
+function excelCell(value) {
+  const text = String(value ?? '');
+  const safe = /^[=+\-@]/.test(text) ? "'" + text : text;
+  return escHTML(safe);
+}
+
+function downloadReportExcel(filename, title, subtitle, headers, rows) {
+  const today = new Date().toLocaleDateString('es-CR', {day:'2-digit', month:'long', year:'numeric'});
+  const bodyRows = rows.length
+    ? rows.map(r => `<tr>${headers.map((_, i) => `<td>${excelCell(r[i])}</td>`).join('')}</tr>`).join('')
+    : `<tr><td colspan="${headers.length}" class="empty">Sin datos para este reporte.</td></tr>`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; color:#111827; }
+  h1 { font-size:18px; margin:0 0 4px; color:#0f1f3d; }
+  .meta { color:#4b5563; margin-bottom:14px; font-size:12px; }
+  table { border-collapse:collapse; width:100%; }
+  th { background:#0f1f3d; color:white; font-weight:bold; border:1px solid #0f1f3d; padding:8px; text-align:left; }
+  td { border:1px solid #cbd5e1; padding:7px; vertical-align:top; }
+  tr:nth-child(even) td { background:#f8fafc; }
+  .empty { text-align:center; color:#64748b; padding:22px; }
+</style>
+</head>
+<body>
+  <h1>${escHTML(title)}</h1>
+  <div class="meta">${escHTML(subtitle)} · Generado ${escHTML(today)}</div>
+  <table>
+    <thead><tr>${headers.map(h => `<th>${escHTML(h)}</th>`).join('')}</tr></thead>
+    <tbody>${bodyRows}</tbody>
+  </table>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function conflictReportRows() {
+  return scanAllConflicts()
+    .sort((a,b) => a.cobertura.localeCompare(b.cobertura) || a.v1.inicio.localeCompare(b.v1.inicio))
+    .map(c => {
+      const overlapStart = c.v1.inicio > c.v2.inicio ? c.v1.inicio : c.v2.inicio;
+      const overlapEnd = c.v1.fin < c.v2.fin ? c.v1.fin : c.v2.fin;
+      return [
+        c.cobertura,
+        c.emp1.nombre,
+        c.emp1.proyecto,
+        c.v1.inicio,
+        c.v1.fin,
+        c.v1.dias || calendarDays(c.v1.inicio, c.v1.fin),
+        c.emp2.nombre,
+        c.emp2.proyecto,
+        c.v2.inicio,
+        c.v2.fin,
+        c.v2.dias || calendarDays(c.v2.inicio, c.v2.fin),
+        overlapStart,
+        overlapEnd,
+        calendarDays(overlapStart, overlapEnd)
+      ];
+    });
+}
+
+function exportConflictExcel() {
+  const rows = conflictReportRows();
+  downloadReportExcel(
+    `choques_cobertura_sbm_${new Date().toISOString().slice(0,10)}.xls`,
+    'SBM Corp - Choques de Cobertura',
+    `${rows.length} choque(s) detectado(s)`,
+    ['Cobertura', 'Funcionario 1', 'Proyecto 1', 'Inicio 1', 'Fin 1', 'Dias 1', 'Funcionario 2', 'Proyecto 2', 'Inicio 2', 'Fin 2', 'Dias 2', 'Traslape desde', 'Traslape hasta', 'Dias traslapados'],
+    rows
+  );
+}
+
+function projectVacationRows(projectFilter) {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const rows = [];
+  emps
+    .filter(emp => !projectFilter || emp.proyecto === projectFilter)
+    .forEach(emp => {
+      (emp.vacaciones||[]).forEach(v => {
+        if (!vacInSelectedPeriod(v)) return;
+        const start = new Date(v.inicio + 'T12:00:00'); start.setHours(0,0,0,0);
+        const end = new Date(v.fin + 'T12:00:00'); end.setHours(0,0,0,0);
+        const status = end < now ? 'Finalizada' : (start <= now && end >= now ? 'En curso' : 'Programada');
+        rows.push({
+          proyecto: emp.proyecto,
+          funcionario: emp.nombre,
+          codigo: emp.codigo || '',
+          cedula: emp.cedula || '',
+          inicio: v.inicio,
+          fin: v.fin,
+          dias: v.dias || calendarDays(v.inicio, v.fin),
+          cobertura: v.cobertura || '',
+          notas: v.notas || '',
+          estado: status
+        });
+      });
+    });
+  return rows.sort((a,b) => a.proyecto.localeCompare(b.proyecto) || a.funcionario.localeCompare(b.funcionario) || a.inicio.localeCompare(b.inicio));
+}
+
+function exportProjectVacationsExcel() {
+  const range = selectedPeriodRange();
+  const projectFilter = document.getElementById('filterProy').value;
+  const rows = projectVacationRows(projectFilter).map(r => [
+    r.proyecto, r.funcionario, r.codigo, r.cedula, r.inicio, r.fin, r.dias, r.cobertura, r.notas, r.estado
+  ]);
+  const label = projectFilter || 'Todos los proyectos';
+  downloadReportExcel(
+    `vacaciones_${cleanFileName(label)}_${new Date().toISOString().slice(0,10)}.xls`,
+    'SBM Corp - Vacaciones por Proyecto',
+    `Proyecto: ${label} · Período: ${range.start} a ${range.end}`,
+    ['Proyecto', 'Funcionario', 'Codigo', 'Cedula', 'Inicio', 'Fin', 'Dias', 'Cobertura', 'Notas', 'Estado'],
+    rows
+  );
+}
+
+function printProjectVacations() {
+  const range = selectedPeriodRange();
+  const projectFilter = document.getElementById('filterProy').value;
+  const label = projectFilter || 'Todos los proyectos';
+  const rows = projectVacationRows(projectFilter);
+  const today = new Date().toLocaleDateString('es-CR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const grouped = rows.reduce((acc, row) => {
+    (acc[row.proyecto] ||= []).push(row);
+    return acc;
+  }, {});
+
+  const body = rows.length ? Object.keys(grouped).sort().map(project => {
+    const projectRows = grouped[project].map(r => `
+      <tr>
+        <td style="font-weight:600">${escHTML(r.funcionario)}</td>
+        <td>${escHTML(r.codigo || '—')}</td>
+        <td>${escHTML(r.inicio)}</td>
+        <td>${escHTML(r.fin)}</td>
+        <td style="text-align:center;font-weight:700;font-family:'IBM Plex Mono',monospace">${escHTML(r.dias)}</td>
+        <td>${escHTML(r.cobertura || '—')}</td>
+        <td><span class="ps-status">${escHTML(r.estado)}</span></td>
+        <td>${escHTML(r.notas || '—')}</td>
+      </tr>`).join('');
+    return `
+      <div class="ps-section">${escHTML(project)} · ${grouped[project].length} registro(s)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Funcionario</th><th>Codigo</th><th>Inicio</th><th>Fin</th>
+            <th style="text-align:center">Dias</th><th>Cobertura</th><th>Estado</th><th>Notas</th>
+          </tr>
+        </thead>
+        <tbody>${projectRows}</tbody>
+      </table>`;
+  }).join('') : `<div style="text-align:center;padding:40px;color:#6b7280">No hay vacaciones programadas para ${escHTML(label)}.</div>`;
+
+  document.getElementById('ps-meta').textContent = `Generado el ${today} · Período: ${range.start} a ${range.end} · Reporte para supervisor`;
+  document.getElementById('ps-person').innerHTML = `📌 ${escHTML(label)}`;
+  document.getElementById('ps-name-bar').textContent = label;
+  document.getElementById('ps-footer-left').textContent = `${rows.length} vacaciones programadas · Generado ${today}`;
+  document.getElementById('ps-body').innerHTML = body;
+  document.getElementById('printSheet').style.display = 'block';
+  document.body.style.overflow = 'hidden';
 }
 
 function importJSON(ev) {
@@ -3307,10 +3569,10 @@ function printCoverage(backup) {
     const isToday = start <= now && end >= now;
     const daysLeft = Math.ceil((start - now) / 86400000);
     let status = isToday
-      ? '<span style="background:#E65100;color:white;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">EN CURSO</span>'
+      ? '<span class="ps-status">EN CURSO</span>'
       : daysLeft <= 3
-        ? `<span style="background:#F57F17;color:white;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">En ${daysLeft}d</span>`
-        : `<span style="background:#1565C0;color:white;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700">En ${daysLeft}d</span>`;
+        ? `<span class="ps-status">En ${daysLeft}d</span>`
+        : `<span class="ps-status">En ${daysLeft}d</span>`;
 
     const dateRange = start.toDateString() === end.toDateString()
       ? new Date(v.inicio+'T12:00:00').toLocaleDateString('es-CR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
