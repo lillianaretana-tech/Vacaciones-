@@ -694,7 +694,6 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
   <button class="btn btn-primary" onclick="openAddEmp()">＋ Funcionario</button>
   <button class="btn btn-info" onclick="syncFromCloud()">☁ Actualizar</button>
   <button class="btn btn-secondary" onclick="testConnection()" title="Probar y forzar conexión a Supabase">🔌 Reconectar</button>
-  <button class="btn btn-success" onclick="migrarDesdeProyectoViejo()" title="Copiar datos del proyecto Supabase anterior (usar solo una vez)" style="background:#7c3aed">🔄 Migrar datos (1 vez)</button>
   <button class="btn btn-secondary" onclick="exportJSON()">💾 Exportar</button>
   <button class="btn btn-secondary" onclick="exportConflictExcel()" title="Exportar choques de cobertura a Excel">⚠ Choques Excel</button>
   <button class="btn btn-secondary" onclick="exportProjectVacationsExcel()" title="Exportar vacaciones del proyecto filtrado a Excel">📊 Excel Proyecto</button>
@@ -2059,63 +2058,12 @@ const SEED = [
 ];
 
 // ═══════════════════════════════════════════
-// SUPABASE CONFIG — PROYECTO NUEVO (activo)
+// SUPABASE CONFIG
 // ═══════════════════════════════════════════
 const SB_URL = 'https://ihajshxnmakyobcubqlq.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloYWpzaHhubWFreW9iY3VicWxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjE5ODMsImV4cCI6MjA5Nzk5Nzk4M30.J-A_GQW2TrZjJje_h9UZ-GvlzLV7fSuY8VDh-8dJXs8';
 const SB_TABLE = 'sbm_control_state';
 const SB_ROW_ID = 'vacaciones_lretana';
-
-// ── PROYECTO VIEJO (solo para migración una sola vez) ──────
-const OLD_SB_URL = 'https://lipkgzneyweiyjoanrcm.supabase.co';
-const OLD_SB_KEY = 'sb_publishable_z5RxIO2RbVPaBvvh0GYpOQ_obEe_F8I';
-const OLD_SB_HEADERS = {
-  'apikey': OLD_SB_KEY,
-  'Authorization': `Bearer ${OLD_SB_KEY}`,
-  'Content-Type': 'application/json'
-};
-
-async function migrarDesdeProyectoViejo() {
-  if (!confirm('Esto copiará los datos del proyecto Supabase ANTERIOR al proyecto NUEVO.\n\nSolo debes hacer esto UNA VEZ. ¿Continuar?')) return;
-  showSyncStatus('⏳ Leyendo datos del proyecto anterior...', '#F57F17');
-  try {
-    const r = await fetch(
-      `${OLD_SB_URL}/rest/v1/${SB_TABLE}?id=eq.${SB_ROW_ID}&select=data`,
-      { headers: OLD_SB_HEADERS }
-    );
-    if (!r.ok) {
-      const txt = await r.text();
-      throw new Error(`Proyecto anterior — HTTP ${r.status}: ${txt}`);
-    }
-    const rows = await r.json();
-    const oldData = (rows && rows[0] && rows[0].data) ? rows[0].data : null;
-    if (!oldData) {
-      showSyncStatus('⚠ No se encontraron datos en el proyecto anterior', '#E65100');
-      alert('No se encontraron datos en el proyecto anterior. Verifica que el proyecto viejo siga activo.');
-      return;
-    }
-    const count = Array.isArray(oldData) ? oldData.length : Object.keys(oldData).length;
-    showSyncStatus(`⏳ Encontrados ${count} registros — subiendo al proyecto nuevo...`, '#F57F17');
-
-    await sbSave(oldData);
-    emps = oldData;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(emps));
-    normalizeAllCoberturas();
-    populateFilter();
-    buildLegend();
-    populateCovFilter();
-    refreshCoberturaList();
-    renderTable();
-    updateStats();
-    renderConflictBar();
-
-    showSyncStatus(`✅ Migración completa — ${count} funcionarios copiados al proyecto nuevo`, '#2E7D32');
-    alert(`✅ Migración exitosa.\n\n${count} funcionarios copiados del proyecto anterior al proyecto nuevo.\n\nVerifica que todo se vea correcto. Una vez confirmado, puedes avisarle a Claude para quitar este botón de migración.`);
-  } catch (e) {
-    showSyncStatus('❌ Error en migración: ' + e.message, '#B71C1C');
-    alert('Error en la migración:\n' + e.message + '\n\nPosibles causas:\n- El proyecto anterior está pausado o eliminado\n- Problema de conexión a internet');
-  }
-}
 
 const SB_HEADERS = {
   'apikey': SB_KEY,
