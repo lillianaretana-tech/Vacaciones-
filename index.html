@@ -8,6 +8,12 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root {
+  
+/* ════════════════════════════════════════════════════════════════
+   DEFINICIÓN DE COLORES POR PROYECTO
+   Agregar nuevo color aquí si creas un nuevo proyecto
+   ════════════════════════════════════════════════════════════════ */
+
   --bg: #0d0f1a;
   --surface: #1c2038;
   --surface-2: #232740;
@@ -18,6 +24,7 @@
   --header-accent: #4f9cf9;
   --c-advant: #4f9cf9;
   --c-bayer: #fb923c;
+  --c-emerson: #6366f1;
   --c-dxc: #a78bfa;
   --c-lseg: #4ade80;
   --c-mck: #f87171;
@@ -1039,6 +1046,10 @@ tr:hover td.td-saldo { background: #1a2744 !important; }
 // ═══════════════════════════════════════════
 // PROJECT COLORS
 // ═══════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════
+// MAPEO DE COLORES - Sincronizar con CSS variables arriba
+// ════════════════════════════════════════════════════════════════
 const PC = {
   'ADVANT':       '#1565C0',
   'BAYER':        '#E65100',
@@ -1058,6 +1069,41 @@ const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov
 // ═══════════════════════════════════════════
 // INITIAL DATA (loaded from company files)
 // ═══════════════════════════════════════════
+
+<!-- 
+╔════════════════════════════════════════════════════════════════════╗
+║         GESTIÓN DE EMPLEADOS - ESTRUCTURA DE DATOS                ║
+╚════════════════════════════════════════════════════════════════════╝
+
+PARA AGREGAR UN NUEVO EMPLEADO:
+1. Copia el bloque JSON de abajo
+2. Modifica: id (nuevo), cedula, codigo, nombre, proyecto
+3. Pega antes del cierre de "]"
+
+PARA ELIMINAR UN EMPLEADO:
+1. Busca su nombre en la sección SEED
+2. Elimina TODO el bloque {...} incluyendo coma
+
+PROYECTOS ACTIVOS:
+- ADVANT, DXC, EMERSON, LSEG, MCK, Operaciones, UBER BAMBU, UBER CEDRAL, UBER COE, WPLACES AV
+
+PLANTILLA PARA NUEVO EMPLEADO:
+{
+  "id": XXX,
+  "saldo": 0,
+  "cedula": "000000000000",
+  "codigo": "CR1-XXXX",
+  "nombre": "APELLIDO Nombre",
+  "proyecto": "PROYECTO",
+  "vacaciones": [],
+  "fechaIngreso": "YYYY-MM-DD",
+  "tipoIdentificacion": "Cédula nacional",
+  "venceIdentificacion": "YYYY-MM-DD",
+  "cumpleanos": "MM/DD",
+  "uniformes": []
+}
+-->
+
 const SEED = [
   {
     "id": 1,
@@ -1085,93 +1131,6 @@ const SEED = [
     "fechaIngreso": "2021-03-19",
     "tipoIdentificacion": "Cédula nacional",
     "venceIdentificacion": "2032-05-03",
-    "cumpleanos": "",
-    "uniformes": []
-  },
-  {
-    "id": 2,
-    "saldo": 0,
-    "cedula": "155837245019",
-    "codigo": "CR1-7253",
-    "nombre": "Romero Maylling Del Carmen",
-    "proyecto": "BAYER",
-    "vacaciones": [],
-    "fechaIngreso": "2025-09-17",
-    "tipoIdentificacion": "DIMEX",
-    "venceIdentificacion": "2026-10-10",
-    "cumpleanos": "",
-    "uniformes": []
-  },
-  {
-    "id": 5,
-    "saldo": 0,
-    "cedula": "602770412",
-    "codigo": "CR1-6382",
-    "nombre": "Mendoza Fajardo Matilde",
-    "proyecto": "BAYER",
-    "vacaciones": [
-      {
-        "fin": "2025-09-21",
-        "dias": 13,
-        "notas": "",
-        "inicio": "2025-09-08",
-        "cobertura": "Juana Díaz"
-      }
-    ],
-    "fechaIngreso": "2024-08-22",
-    "tipoIdentificacion": "Cédula nacional",
-    "venceIdentificacion": "2028-08-05",
-    "cumpleanos": "",
-    "uniformes": []
-  },
-  {
-    "id": 7,
-    "saldo": 0,
-    "cedula": "603690027",
-    "codigo": "CR1-6365",
-    "nombre": "Rodríguez Quesada Marilyn",
-    "proyecto": "BAYER",
-    "vacaciones": [
-      {
-        "fin": "2026-02-25",
-        "dias": 5,
-        "notas": "",
-        "inicio": "2026-02-19",
-        "cobertura": "Juana Díaz"
-      }
-    ],
-    "fechaIngreso": "2024-08-16",
-    "tipoIdentificacion": "Cédula nacional",
-    "venceIdentificacion": "2027-01-25",
-    "cumpleanos": "",
-    "uniformes": []
-  },
-  {
-    "id": 8,
-    "saldo": 0,
-    "cedula": "401740300",
-    "codigo": "CR1-6179",
-    "nombre": "Sánchez Salas Andrea Marcela",
-    "proyecto": "BAYER",
-    "vacaciones": [
-      {
-        "fin": "2025-06-01",
-        "dias": 14,
-        "notas": "",
-        "inicio": "2025-05-19",
-        "cobertura": "Juana Díaz"
-      },
-      {
-        "fin": "2026-05-31",
-        "dias": 14,
-        "notas": "",
-        "inicio": "2026-05-18",
-        "cobertura": "Juana Díaz"
-      }
-    ],
-    "fechaIngreso": "2024-05-24",
-    "tipoIdentificacion": "Cédula nacional",
-    "venceIdentificacion": "2026-11-01",
     "cumpleanos": "",
     "uniformes": []
   },
@@ -1929,35 +1888,6 @@ const SEED = [
     "uniformes": []
   },
   {
-    "id": 40,
-    "saldo": 7,
-    "cedula": "134000433200",
-    "codigo": "CR1-3556",
-    "nombre": "Guevara Cruz Celia",
-    "proyecto": "BAYER",
-    "uniformes": [],
-    "vacaciones": [
-      {
-        "fin": "2024-10-06",
-        "dias": 6,
-        "notas": "",
-        "inicio": "2024-10-01",
-        "cobertura": "Juana Díaz"
-      },
-      {
-        "fin": "2025-11-02",
-        "dias": 7,
-        "notas": "",
-        "inicio": "2025-10-27",
-        "cobertura": ""
-      }
-    ],
-    "fechaIngreso": "2019-07-27",
-    "tipoIdentificacion": "DIMEX",
-    "venceIdentificacion": "2028-01-12",
-    "cumpleanos": ""
-  },
-  {
     "id": 41,
     "saldo": 0,
     "cedula": "",
@@ -2000,48 +1930,6 @@ const SEED = [
     "cumpleanos": ""
   },
   {
-    "id": 44,
-    "saldo": 0,
-    "cedula": "702250818",
-    "codigo": "CR1-6935",
-    "nombre": "Ramírez Jiménez Manuel José",
-    "proyecto": "BAYER",
-    "uniformes": [],
-    "vacaciones": [],
-    "fechaIngreso": "2025-05-19",
-    "tipoIdentificacion": "Cédula nacional",
-    "venceIdentificacion": "2034-02-06",
-    "cumpleanos": ""
-  },
-  {
-    "id": 45,
-    "saldo": 0,
-    "cedula": "155820694405",
-    "codigo": "",
-    "nombre": "Romero Dania",
-    "proyecto": "BAYER",
-    "uniformes": [],
-    "vacaciones": [],
-    "fechaIngreso": "2026-09-17",
-    "tipoIdentificacion": "DIMEX",
-    "venceIdentificacion": "2026-09-17",
-    "cumpleanos": ""
-  },
-  {
-    "id": 46,
-    "saldo": 0,
-    "cedula": "155853401908",
-    "codigo": "",
-    "nombre": "Leiva Muñoz Lisbeth",
-    "proyecto": "BAYER",
-    "uniformes": [],
-    "vacaciones": [],
-    "fechaIngreso": "2025-07-21",
-    "tipoIdentificacion": "DIMEX",
-    "venceIdentificacion": "2026-08-13",
-    "cumpleanos": ""
-  },
-  {
     "id": 47,
     "saldo": 0,
     "cedula": "113390424",
@@ -2054,6 +1942,90 @@ const SEED = [
     "tipoIdentificacion": "Cédula nacional",
     "venceIdentificacion": "2032-02-02",
     "cumpleanos": ""
+  },
+  {
+    "id": 48,
+    "saldo": 0,
+    "cedula": "155827764410",
+    "codigo": "EM1-001",
+    "nombre": "Cárdenas Eugenia Antonia",
+    "proyecto": "EMERSON",
+    "vacaciones": [],
+    "fechaIngreso": "2014-12-01",
+    "tipoIdentificacion": "Cédula nacional",
+    "venceIdentificacion": "2033-12-01",
+    "cumpleanos": "05/11",
+    "uniformes": []
+  },
+  {
+    "id": 49,
+    "saldo": 0,
+    "cedula": "155836161334",
+    "codigo": "EM1-002",
+    "nombre": "Díaz Guadamuz Griselda María",
+    "proyecto": "EMERSON",
+    "vacaciones": [],
+    "fechaIngreso": "2013-02-15",
+    "tipoIdentificacion": "Cédula nacional",
+    "venceIdentificacion": "2033-02-01",
+    "cumpleanos": "03/20",
+    "uniformes": []
+  },
+  {
+    "id": 50,
+    "saldo": 0,
+    "cedula": "155805556033",
+    "codigo": "EM1-003",
+    "nombre": "Flores Castillo Marisol",
+    "proyecto": "EMERSON",
+    "vacaciones": [],
+    "fechaIngreso": "2015-03-10",
+    "tipoIdentificacion": "Cédula nacional",
+    "venceIdentificacion": "2035-03-10",
+    "cumpleanos": "07/18",
+    "uniformes": []
+  },
+  {
+    "id": 51,
+    "saldo": 0,
+    "cedula": "155856737021",
+    "codigo": "EM1-004",
+    "nombre": "Rodríguez Sánchez Julia Maritza",
+    "proyecto": "EMERSON",
+    "vacaciones": [],
+    "fechaIngreso": "2013-07-22",
+    "tipoIdentificacion": "Cédula nacional",
+    "venceIdentificacion": "2033-07-22",
+    "cumpleanos": "12/05",
+    "uniformes": []
+  },
+  {
+    "id": 52,
+    "saldo": 0,
+    "cedula": "112030562",
+    "codigo": "EM1-005",
+    "nombre": "Sandí Bermúdez Marilyn",
+    "proyecto": "EMERSON",
+    "vacaciones": [],
+    "fechaIngreso": "2016-10-03",
+    "tipoIdentificacion": "Cédula nacional",
+    "venceIdentificacion": "2036-10-03",
+    "cumpleanos": "01/14",
+    "uniformes": []
+  },
+  {
+    "id": 53,
+    "saldo": 0,
+    "cedula": "115760561",
+    "codigo": "EM1-006",
+    "nombre": "Torres Marin Bryan Josue",
+    "proyecto": "EMERSON",
+    "vacaciones": [],
+    "fechaIngreso": "2017-05-08",
+    "tipoIdentificacion": "Cédula nacional",
+    "venceIdentificacion": "2037-05-08",
+    "cumpleanos": "04/22",
+    "uniformes": []
   }
 ];
 
@@ -3699,6 +3671,113 @@ function closePrint() {
 
 // ── START ──
 init();
+
+// ════════════════════════════════════════════════════════════════════
+// FUNCIONES DE ADMINISTRACIÓN
+// ════════════════════════════════════════════════════════════════════
+
+function abrirAdmin() {
+  document.getElementById('adminPanel').style.display = 'block';
+  actualizarListaProyectos();
+}
+
+function cerrarAdmin() {
+  document.getElementById('adminPanel').style.display = 'none';
+}
+
+function actualizarListaProyectos() {
+  const proyectos = [...new Set(emps.map(e => e.proyecto))].sort();
+  const select = document.getElementById('adminProyecto');
+  select.innerHTML = '<option value="">-- Selecciona un proyecto --</option>';
+  proyectos.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = p;
+    select.appendChild(opt);
+  });
+  document.getElementById('adminProyectoInfo').style.display = 'none';
+}
+
+function cargarProyectoAdmin() {
+  const proyecto = document.getElementById('adminProyecto').value;
+  if (!proyecto) {
+    document.getElementById('adminProyectoInfo').style.display = 'none';
+    return;
+  }
+  
+  const empCount = emps.filter(e => e.proyecto === proyecto).length;
+  document.getElementById('adminProjEmpleados').textContent = empCount;
+  document.getElementById('adminNuevoNombre').value = proyecto;
+  document.getElementById('adminProyectoInfo').style.display = 'block';
+}
+
+function renombrarProyecto() {
+  const proyectoViejo = document.getElementById('adminProyecto').value;
+  const proyectoNuevo = document.getElementById('adminNuevoNombre').value.trim();
+  
+  if (!proyectoViejo || !proyectoNuevo) {
+    alert('❌ Selecciona proyecto y escribe nuevo nombre');
+    return;
+  }
+  
+  if (proyectoViejo === proyectoNuevo) {
+    alert('ℹ️ El nombre es igual al actual');
+    return;
+  }
+  
+  if (confirm(\`¿Renombrar "\${proyectoViejo}" a "\${proyectoNuevo}"?\`)) {
+    emps = emps.map(e => 
+      e.proyecto === proyectoViejo 
+        ? {...e, proyecto: proyectoNuevo}
+        : e
+    );
+    
+    // También actualizar PC (colores)
+    if (PC[proyectoViejo]) {
+      PC[proyectoNuevo] = PC[proyectoViejo];
+      delete PC[proyectoViejo];
+    }
+    
+    guardarDatos();
+    render();
+    actualizarListaProyectos();
+    cargarProyectoAdmin();
+    alert('✅ Proyecto renombrado: ' + proyectoNuevo);
+  }
+}
+
+function eliminarProyecto() {
+  const proyecto = document.getElementById('adminProyecto').value;
+  if (!proyecto) {
+    alert('❌ Selecciona un proyecto');
+    return;
+  }
+  
+  const count = emps.filter(e => e.proyecto === proyecto).length;
+  
+  if (confirm(\`⚠️ ¿ELIMINAR los \${count} empleados de "\${proyecto}"?
+Esta acción NO se puede deshacer.\`)) {
+    if (confirm('🚨 ¿SEGURO? Escribe el nombre del proyecto para confirmar eliminación.\n\nNombre: ' + proyecto)) {
+      const confirmName = prompt(\`Escribe "\${proyecto}" exacto para confirmar:\`);
+      
+      if (confirmName === proyecto) {
+        emps = emps.filter(e => e.proyecto !== proyecto);
+        
+        // Eliminar color del proyecto
+        if (PC[proyecto]) delete PC[proyecto];
+        
+        guardarDatos();
+        render();
+        actualizarListaProyectos();
+        document.getElementById('adminProyectoInfo').style.display = 'none';
+        alert('✅ Proyecto eliminado: ' + proyecto);
+      } else {
+        alert('❌ Confirmación cancelada');
+      }
+    }
+  }
+}
+
 </script>
 </body>
 </html>
