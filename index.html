@@ -1576,7 +1576,9 @@ const SB_HEADERS = {
 };
 
 async function sbGet() {
-  const rows=await api('vacaciones_expedientes_v2?select=id,expediente,updated_at&order=id');
+  const allRows=await api('vacaciones_expedientes_v2?select=id,expediente,updated_at&order=id');
+  // Payroll-only historical records must not enter vacation rosters or deletion baselines.
+  const rows=allRows.filter(r=>r.expediente?.planillasHistorico!==true);
   cloudBaseline=new Map(rows.map(r=>[r.id,{data:JSON.stringify(r.expediente),updated_at:r.updated_at}]));
   return rows.map(r=>r.expediente);
 }
